@@ -342,13 +342,13 @@ const SITE_DATA = {
   themes: ["Prairie Adventure","Space & Rockets","Ball Pit World","Princess Castle","Little Farm","Rainbow Unicorn","Let the team pick"],
   timeslots: ["10:00","11:30","1:00","2:30","4:00","5:30"],
   faqs: [
-    { q:"Is a deposit required to book a party?", a:"Yes. We take a $50 non-refundable deposit at booking to lock in your slot; the balance is due on party day. The deposit comes off your total." },
+    { q:"Is a deposit required to book a party?", a:"Yes — an $80 non-refundable deposit secures your booking and locks in your slot. The balance is due on party day, and the deposit comes off your total." },
     { q:"Do I include the birthday child in the headcount?", a:"Yes, please include the birthday child in your total. The guest of honour is the first name we love to see on the list!" },
     { q:"Can I bring my own cake?", a:"Absolutely. Per health guidelines, outside cake must be store-bought and arrive sealed. We can't store ice-cream cakes that need a freezer." },
     { q:"Not sure on numbers — can I add guests later?", a:"No problem. Packages have a minimum headcount; a heads-up on extra guests is appreciated but not required — bring the whole town, we'll figure it out." },
     { q:"How early should we arrive?", a:"Aim for 20 minutes before your party. Just tell the front desk you're here for the Par-tay!" },
     { q:"Is a waiver needed?", a:"Yes. Every child who plays needs a one-time waiver signed by a parent/guardian. Sign online to skip the line." },
-    { q:"What if I need to change my booking?", a:"All bookings are final, but we're happy to help you reschedule or adjust details. Call our party planners at (306) 555-7373." },
+    { q:"What's the cancellation policy?", a:"The $80 deposit is non-refundable, and cancellations within 72 hours of your party are charged in full. Need to adjust details? Call our party planners at (306) 555-7373 and we'll do our best to help." },
     { q:"Are socks required?", a:"Yes — grip socks are required in all play areas, adults included. Forgot yours? Grab a pair at the front desk for $3." }
   ],
   policy: [
@@ -622,7 +622,8 @@ function Packages(){
           </div>
         </div>`).join("")}
       </div>
-      <div class="card reveal" style="margin-top:26px;padding:26px 30px;display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;flex-wrap:wrap;max-width:760px;margin-inline:auto">
+      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:20px">🔒 An <strong>$80 non-refundable deposit</strong> secures your booking. Cancellations within 72 hours are charged in full.</p>
+      <div class="card reveal" style="margin-top:18px;padding:26px 30px;display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;flex-wrap:wrap;max-width:760px;margin-inline:auto">
         <span style="font-size:34px">🎈</span>
         <div style="flex:1;min-width:220px">
           <h3 style="color:#fff;font-size:21px">Bigger group or a custom celebration?</h3>
@@ -988,7 +989,7 @@ const Booking = {
     </div>`;
   },
   stepReview(){
-    const f = this.form, pkg = this.pkg(), at = this.addonTotal(), total = this.total(), deposit = 50;
+    const f = this.form, pkg = this.pkg(), at = this.addonTotal(), total = this.total(), deposit = 80;
     const row = (label, value) => `<div style="display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px"><span style="color:var(--ink-soft);font-weight:600">${label}</span><span style="font-weight:700;color:var(--ink);text-align:right">${value}</span></div>`;
     const chosen = D.addons.filter(a => f.addons[a.key]);
     return `<div>
@@ -1011,13 +1012,13 @@ const Booking = {
         </div>
         <div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.12);font-size:13.5px;display:flex;gap:10px;align-items:center">
           <span style="font-size:20px">🔒</span>
-          <span>Pay just a <strong style="color:var(--gold)">$${deposit} deposit</strong> today to lock your slot. The balance of <strong>$${total-deposit}</strong> is due on party day. Deposit is non-refundable but reschedulable.</span>
+          <span>Pay just a <strong style="color:var(--gold)">$${deposit} deposit</strong> today to lock your slot. The balance of <strong>$${total-deposit}</strong> is due on party day. The deposit is non-refundable, and cancellations within 72 hours are charged in full.</span>
         </div>
       </div>
     </div>`;
   },
   success(){
-    const f = this.form, pkg = this.pkg(), total = this.total(), deposit = 50;
+    const f = this.form, pkg = this.pkg(), total = this.total(), deposit = 80;
     if (!this._bookingNo) this._bookingNo = "#FD" + Math.floor(1000 + Math.random()*9000);
     return `<div style="text-align:center;padding:10px 0 6px">
       <div style="font-size:58px;animation:bob 1.6s ease-in-out infinite">🎉</div>

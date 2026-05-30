@@ -1177,7 +1177,7 @@ const WaiverModal = {
     const f=this.form;
     return `<div>
       <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement, fill in your details, and sign. One waiver covers all children listed.</p>
-      <div style="max-height:160px;overflow:auto;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:var(--bg);white-space:pre-wrap;margin-bottom:20px">${WAIVER_TEXT}</div>
+      <div style="max-height:320px;overflow:auto;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:var(--bg);white-space:pre-wrap;margin-bottom:20px">${WAIVER_TEXT}</div>
       <div style="display:grid;gap:15px">
         ${this.field("All children's first names", `<input id="wv-children" value="${f.children.replace(/"/g,'&quot;')}" placeholder="e.g. Maple, Sage, Rowan" class="bk-input" />`, "Comma-separated", this.E("children"))}
         ${this.field("All adults' first names (optional)", `<input id="wv-adults" value="${f.adults.replace(/"/g,'&quot;')}" placeholder="e.g. Sam, Jordan" class="bk-input" />`)}

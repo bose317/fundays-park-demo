@@ -659,8 +659,10 @@ function Visit(){
           </div>
         </div>
         <div class="reveal" style="position:relative">
-          ${Scene("scene-building.svg","aspect-ratio:1/1.04;border-radius:28px;box-shadow:var(--shadow-lift)")}
-          ${Star(30,"var(--gold)","position:absolute;top:-12px;left:-12px;animation:wiggle 4s ease-in-out infinite")}
+          <div style="aspect-ratio:1/1.04;border-radius:28px;overflow:hidden;box-shadow:var(--shadow-lift);background:var(--surface)">
+            <iframe title="Map to 7 Fundays Park, Langham SK" src="https://maps.google.com/maps?q=213%20Service%20Road%20West%2C%20Langham%2C%20SK%20S0K%200E7&z=14&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" style="width:100%;height:100%;border:0;display:block"></iframe>
+          </div>
+          ${Star(30,"var(--gold)","position:absolute;top:-12px;left:-12px;animation:wiggle 4s ease-in-out infinite;pointer-events:none")}
         </div>
       </div>
     </div>
@@ -823,15 +825,11 @@ function Waiver(){
     ${Star(26,"var(--gold)","position:absolute;top:70px;right:7%;opacity:.5;animation:wiggle 5s ease-in-out infinite")}
     <div class="wrap" style="position:relative">
       ${SectionHead({ center:true, eyebrow:"Waiver", title:"Sign your waiver", lead:"Every guest needs a signed waiver on file before play. Sign online in about a minute, or download the PDF to print and bring in." })}
-      <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">
+      <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-primary btn-lg" data-waiver>✍️ Sign waiver online</button>
-        <a class="btn btn-ghost btn-lg" href="assets/waiver.pdf" download>⬇️ Download PDF</a>
+        <a class="btn btn-ghost btn-lg" href="assets/waiver.pdf" target="_blank" rel="noopener">📄 View / download PDF</a>
       </div>
-      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-bottom:24px">Prefer paper? Download it, fill it out, and bring it in. The full waiver is shown below for reference.</p>
-      <div class="card reveal" style="overflow:hidden;padding:0">
-        <iframe src="assets/waiver.pdf#view=FitH" title="7 Fundays Park waiver form" loading="lazy" style="width:100%;height:78vh;min-height:520px;border:0;display:block;background:#fff"></iframe>
-      </div>
-      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:16px">Waiver issued by ${D.brand.legal}, operating as 7 Fundays Park. If the form doesn't display on your device, use the buttons above to open it.</p>
+      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:16px">Sign in about a minute — one waiver covers all your children. Issued by ${D.brand.legal}, operating as 7 Fundays Park.</p>
     </div>
   </section>`;
 }

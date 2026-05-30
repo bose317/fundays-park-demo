@@ -1097,25 +1097,34 @@ const Booking = {
    in a Google Sheet. Set after deploying the script. */
 const WAIVER_ENDPOINT = "https://script.google.com/macros/s/AKfycbwQv3RVsRh4nNmPAdHHXzR9FDkYw5McbwwZayw6RwXRe_INsFEg19viUxUTFVSRxy8d/exec";
 
-const WAIVER_TEXT = `In consideration of FunFusion Greenfairway Ventures Ltd. (operating as “7 Fundays Park”), located at Unit 3, 213 Service Road West, Langham, Saskatchewan, allowing the participant to enter the facility, the undersigned acknowledges and agrees, on behalf of themselves and their child(ren), heirs, assigns, and personal representatives:
+const WAIVER_TEXT = `FUNFUSION GREENFAIRWAY VENTURES LTD.
+Acknowledgment of Risk, Waiver, and Release of Liability
 
-1. The risk of injury from the structures, games, or activities at 7 Fundays Park entails known and unknown risks that could result in physical injury, permanent disability, death, or other damage to my child, property, or third parties.
+Please Read Carefully
 
-2. I knowingly and freely assume all such risks, both known and unknown, and voluntarily release, forever discharge, and waive any and all claims against 7 Fundays Park, and release it from any and all liability for any loss, damage, expense, or injury (including death) my child may suffer as a result of participating in or using the structures, games, or activities — due to any cause whatsoever, including negligence, breach of contract, or breach of any statutory or other duty of care on the part of 7 Fundays Park.
+TO: FUNFUSION GREENFAIRWAY VENTURES LTD., their agents, owners, officers, affiliates, volunteers, participants, employees, and all other persons or entities acting in any capacity on their behalf (hereinafter collectively referred to as "7 Fundays Park"):
 
-3. My child agrees to comply with the stated and customary terms and conditions for participation. If I observe any unusual or significant concern in my child’s readiness for participation, I will remove them from the activities immediately.
+IN CONSIDERATION OF 7 FUNDAYS PARK, located at Unit 3, 213 Service Road West, in the Town of Langham, in the Province of Saskatchewan, allowing the participant to enter the facility, the undersigned acknowledges and agrees as follows on behalf of themselves, their spouse, children, parents, heirs, assigns, personal representatives, and estate ('Releasees'):
 
-4. I agree to hold harmless and indemnify 7 Fundays Park from all liability for any property damage or personal injury to any third party resulting from my child’s participation.
+1. The risk of injury from the structure, games, or activities at 7 Fundays Park entails known and unknown risks that could result in physical injury, permanent disability, death, or other damage to my child, property, or third parties; and
 
-5. I understand that I and/or my child(ren) may appear in a photograph or video of the facility that may be posted on social media or a website, and I release 7 Fundays Park from any damage resulting from such posts.`;
+2. I, on behalf of my child and his/her heirs, assigns, and personal representatives, KNOWINGLY AND FREELY ASSUME ALL SUCH RISKS, both known and unknown, and hereby voluntarily release, forever discharge, and waive any and all claims, demands, or causes of action, that I have or may have in the future against 7 Fundays Park and release 7 Fundays Park from any and all liability for any loss, damage, expense, or injury, including death, that my child may suffer as a result of my child participating in or use of 7 Fundays Park structure, games or activities DUE TO ANY CAUSE WHATSOEVER, INCLUDING NEGLIGENCE, BREACH OF CONTRACT, OR BREACH OF ANY STATUTORY OR OTHER DUTY OF CARE ON THE PART OF 7 FUNDAYS PARK.
+
+3. My child agrees to comply with the stated and customary terms and conditions for participation at 7 Fundays Park. If I observe any unusual or significant concern in my child's readiness for participation, I will remove him/her from the structure, games, and activities at 7 Fundays Park immediately; and
+
+4. I further agree to hold harmless and indemnify 7 Fundays Park from all liability for any property damage or personal injury to any third party resulting from my child's participation in or use of 7 Fundays Park structures, games, or activities.
+
+5. I understand that although it is not a common occurrence, that me and/or my child(ren) may be in a picture of the facility which may be posted on social media or a website. I also hold harmless and release 7 Fundays Park from any damage resulting from any post of a photograph, video, and/or record of me and/or my children on any social media or other platform;
+
+I have read the above Acknowledgment of Risk, Waiver, and Release of Liability and as Parent / Guardian of the child named above, I hereby accept all terms and conditions contained herein and hereby consent to her/his participation in this activity.`;
 
 const WaiverModal = {
   open:false, done:false, showErr:false, submitting:false,
-  form:{ children:"", adults:"", parent:"", phone:"", date:"", signature:"", marketing:false, guardian:false, agree:false },
+  form:{ children:[""], adults:"", parent:"", phone:"", date:"", signature:"", marketing:false, guardian:false, agree:false },
 
   start(){
     this.open=true; this.done=false; this.showErr=false; this.submitting=false;
-    this.form={ children:"", adults:"", parent:"", phone:"", date:new Date().toISOString().split("T")[0], signature:"", marketing:false, guardian:false, agree:false };
+    this.form={ children:[""], adults:"", parent:"", phone:"", date:new Date().toISOString().split("T")[0], signature:"", marketing:false, guardian:false, agree:false };
     document.body.style.overflow="hidden"; this.render();
   },
   close(){ this.open=false; document.body.style.overflow=""; const m=document.getElementById("waiver-mount"); if(m) m.innerHTML=""; },
@@ -1123,7 +1132,7 @@ const WaiverModal = {
   readDom(){
     const g=id=>document.getElementById(id);
     if(!g("wv-parent")) return;
-    this.form.children=g("wv-children").value;
+    this.form.children=this.form.children.map((_,i)=>{ const el=g("wv-child-"+i); return el?el.value:""; });
     this.form.adults=g("wv-adults").value;
     this.form.parent=g("wv-parent").value;
     this.form.phone=g("wv-phone").value;
@@ -1133,9 +1142,12 @@ const WaiverModal = {
     this.form.guardian=g("wv-guardian").checked;
     this.form.agree=g("wv-agree").checked;
   },
+  addChild(){ this.readDom(); this.form.children.push(""); this.render(); },
+  removeChild(i){ this.readDom(); this.form.children.splice(i,1); if(!this.form.children.length) this.form.children.push(""); this.render(); },
+  setExpiry(){ const d=this.form.date; if(!d) return ""; const p=d.split("-"); return (parseInt(p[0],10)+1)+"-"+p[1]+"-"+p[2]; },
   errs(){
     const f=this.form,e={};
-    if(!f.children.trim()) e.children="Please list the children's first names";
+    if(!f.children.some(c=>String(c).trim())) e.children="Please add at least one child's name";
     if(!f.parent.trim()) e.parent="Please enter your full name";
     if(f.phone.replace(/\D/g,"").length<7) e.phone="Please enter a valid phone";
     if(!f.date) e.date="Please pick a date";
@@ -1150,7 +1162,8 @@ const WaiverModal = {
     this.readDom();
     if(Object.keys(this.errs()).length){ this.showErr=true; this.render(); return; }
     this.submitting=true; this.render();
-    const payload={ ...this.form, ts:new Date().toISOString(), source:"website" };
+    const kids=this.form.children.map(c=>String(c).trim()).filter(Boolean);
+    const payload={ children:kids.join(", "), childrenCount:kids.length, adults:this.form.adults, parent:this.form.parent, phone:this.form.phone, date:this.form.date, expiry:this.setExpiry(), signature:this.form.signature, marketing:this.form.marketing, guardian:this.form.guardian, agree:this.form.agree, ts:new Date().toISOString(), source:"website" };
     try{ const k="fd_waivers"; const a=JSON.parse(localStorage.getItem(k)||"[]"); a.push(payload); localStorage.setItem(k,JSON.stringify(a)); }catch(_){}
     let finished=false;
     const finish=()=>{ if(finished) return; finished=true; this.submitting=false; this.done=true; this.render(); };
@@ -1175,13 +1188,23 @@ const WaiverModal = {
 
   formHtml(){
     const f=this.form;
+    const childRows = f.children.map((c,i)=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input id="wv-child-${i}" value="${String(c).replace(/"/g,'&quot;')}" placeholder="Child ${i+1} — first name" class="bk-input" />
+          ${f.children.length>1?`<button type="button" data-remove-child="${i}" aria-label="Remove child" style="flex-shrink:0;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red);font-size:20px;line-height:1;font-weight:800">×</button>`:''}
+        </div>`).join("");
     return `<div>
-      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement, fill in your details, and sign. One waiver covers all children listed.</p>
+      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement below, then sign as the parent or legal guardian of your child(ren). One waiver covers all your children and stays valid for one year.</p>
       <div style="max-height:320px;overflow:auto;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:var(--bg);white-space:pre-wrap;margin-bottom:20px">${WAIVER_TEXT}</div>
+
+      <div style="background:color-mix(in srgb,var(--accent) 9%,transparent);border:2px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:14px;padding:13px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start">
+        <span style="font-size:22px">🧑‍🤝‍🧑</span>
+        <span style="font-size:14px;color:var(--ink);line-height:1.5">You are signing as the <strong>parent or legal guardian</strong> of the child(ren) listed below.</span>
+      </div>
+
       <div style="display:grid;gap:15px">
-        ${this.field("All children's first names", `<input id="wv-children" value="${f.children.replace(/"/g,'&quot;')}" placeholder="e.g. Maple, Sage, Rowan" class="bk-input" />`, "Comma-separated", this.E("children"))}
-        ${this.field("All adults' first names (optional)", `<input id="wv-adults" value="${f.adults.replace(/"/g,'&quot;')}" placeholder="e.g. Sam, Jordan" class="bk-input" />`)}
-        ${this.field("Parent / guardian full name", `<input id="wv-parent" value="${f.parent.replace(/"/g,'&quot;')}" placeholder="Your full name" class="bk-input" />`, null, this.E("parent"))}
+        ${this.field("Parent / guardian full name", `<input id="wv-parent" value="${f.parent.replace(/"/g,'&quot;')}" placeholder="Your full name" class="bk-input" />`, "The adult signing this waiver", this.E("parent"))}
+        ${this.field("Your children's first names", `${childRows}<button type="button" data-add-child style="margin-top:2px;display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:14px;padding:9px 16px;border-radius:999px">＋ Add another child</button>`, "Add a row for each child this waiver covers", this.E("children"))}
+        ${this.field("All adults' first names (optional)", `<input id="wv-adults" value="${f.adults.replace(/"/g,'&quot;')}" placeholder="e.g. Sam, Jordan" class="bk-input" />`, "Other adults visiting with you")}
         <div class="bk-row" style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
           ${this.field("Phone number", `<input id="wv-phone" type="tel" value="${f.phone.replace(/"/g,'&quot;')}" placeholder="(306) 555-0000" class="bk-input" />`, null, this.E("phone"))}
           ${this.field("Date", `<input id="wv-date" type="date" value="${f.date}" class="bk-input" />`, null, this.E("date"))}
@@ -1189,28 +1212,31 @@ const WaiverModal = {
         ${this.field("Signature", `<input id="wv-sign" value="${f.signature.replace(/"/g,'&quot;')}" placeholder="Type your full name" class="bk-input" style="font-family:'Baloo 2',cursive;font-size:22px;font-style:italic" />`, "Typing your name is your electronic signature.", this.E("signature"))}
       </div>
       <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:8px">
-        ${this.check("wv-guardian","I certify that I am the parent or legal guardian of the above minor(s).", f.guardian, this.E("guardian"))}
-        ${this.check("wv-agree","I am at least 18 years old, and I have read and agree to the terms of the agreement above.", f.agree, this.E("agree"))}
-        ${this.check("wv-marketing","I'd like to receive special offers and discounts by text message. (optional)", f.marketing, "")}
+        ${this.check("wv-guardian","I certify that I am the parent or legal guardian of the above minors.", f.guardian, this.E("guardian"))}
+        ${this.check("wv-agree","I am at least 18 years old, and I have read and agree to the terms of the above agreement.", f.agree, this.E("agree"))}
+        ${this.check("wv-marketing","I wish to receive special offers and discounts via text message.", f.marketing, "")}
       </div>
       <div class="bk-foot">
-        <a class="btn btn-ghost" href="assets/waiver.pdf" download style="padding:13px 22px;font-size:15px">⬇️ Download PDF</a>
+        <a class="btn btn-ghost" href="assets/waiver.pdf" target="_blank" rel="noopener" style="padding:13px 22px;font-size:15px">📄 View PDF</a>
         <button class="btn btn-primary" style="margin-left:auto" data-waiver-submit ${this.submitting?'disabled':''}>${this.submitting?'Submitting…':'✍️ Sign & submit'}</button>
       </div>
     </div>`;
   },
   successHtml(){
     const f=this.form;
-    const kids = f.children.trim() ? f.children.trim() : "your family";
+    const kids=f.children.map(c=>String(c).trim()).filter(Boolean);
+    const kidStr = kids.length ? kids.join(", ") : "your family";
+    const exp=this.setExpiry();
     return `<div style="text-align:center;padding:10px 0 6px">
       <div style="font-size:54px;animation:bob 1.6s ease-in-out infinite">✅</div>
       <h3 class="h-xl" style="font-size:28px;margin-top:8px">Waiver signed!</h3>
-      <p style="color:var(--ink-soft);font-size:15.5px;margin-top:10px;max-width:450px;margin-inline:auto">Thanks${f.parent?`, ${f.parent.split(' ')[0]}`:''} — the waiver for <strong style="color:var(--brand)">${kids}</strong> is on file. Just check in at the front desk and you're ready to play. 🎈</p>
-      <div class="card" style="display:inline-flex;gap:26px;padding:14px 26px;margin-top:20px;box-shadow:none;border:2px solid var(--line);flex-wrap:wrap;justify-content:center">
+      <p style="color:var(--ink-soft);font-size:15.5px;margin-top:10px;max-width:460px;margin-inline:auto">Thanks${f.parent?`, ${f.parent.split(' ')[0]}`:''} — the waiver for <strong style="color:var(--brand)">${kidStr}</strong> (${kids.length} ${kids.length===1?'child':'children'}) is on file. Just check in at the front desk and you're ready to play. 🎈</p>
+      <div class="card" style="display:inline-flex;gap:22px;padding:14px 24px;margin-top:20px;box-shadow:none;border:2px solid var(--line);flex-wrap:wrap;justify-content:center">
         <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Signed by</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--brand)">${f.parent||'—'}</div></div>
-        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Date</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--brand)">${f.date||'—'}</div></div>
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Date signed</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--brand)">${f.date||'—'}</div></div>
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid until</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">${exp||'—'}</div></div>
       </div>
-      <p style="font-size:13px;color:var(--ink-soft);margin-top:18px">A record has been saved. See you soon! 🌾</p>
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:18px">Saved to our records — your waiver is valid for one year. See you soon! 🌾</p>
       <button class="btn btn-primary btn-lg" style="margin-top:16px" data-waiver-close>Done</button>
     </div>`;
   },
@@ -1225,7 +1251,7 @@ const WaiverModal = {
           <img src="assets/badge.png" alt="" />
           <div style="flex:1">
             <div style="font-family:var(--font-display);font-weight:800;font-size:20px">${done?"Waiver signed!":"Sign your waiver"}</div>
-            <div style="font-size:13.5px;color:rgba(255,255,255,.75)">${done?"You're all set 🎉":"One waiver per family · takes a minute"}</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.75)">${done?"You're all set 🎉":"Parent / guardian · one waiver per family · valid 1 year"}</div>
           </div>
           <button class="bk-close" aria-label="Close" data-waiver-close>×</button>
         </div>
@@ -1309,7 +1335,7 @@ const PolicyModal = {
 
     // delegated clicks
     document.body.addEventListener("click", (e) => {
-      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay],[data-policy-close],[data-policy-overlay]");
+      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay],[data-add-child],[data-remove-child],[data-policy-close],[data-policy-overlay]");
       if (!t) return;
 
       if (t.hasAttribute("data-scroll")){ e.preventDefault(); if (menu) menu.classList.remove("open"); const tgt=t.getAttribute("data-scroll"); if (tgt==="policy"){ PolicyModal.start(); return; } scrollToId(tgt); return; }
@@ -1319,6 +1345,8 @@ const PolicyModal = {
       if (t.hasAttribute("data-waiver")){ if (menu) menu.classList.remove("open"); WaiverModal.start(); return; }
       if (t.hasAttribute("data-waiver-close")){ WaiverModal.close(); return; }
       if (t.hasAttribute("data-waiver-submit")){ WaiverModal.submit(); return; }
+      if (t.hasAttribute("data-add-child")){ WaiverModal.addChild(); return; }
+      if (t.hasAttribute("data-remove-child")){ WaiverModal.removeChild(parseInt(t.getAttribute("data-remove-child"),10)); return; }
       if (t.hasAttribute("data-waiver-overlay") && e.target === t){ WaiverModal.close(); return; }
       if (t.hasAttribute("data-policy-close")){ PolicyModal.close(); return; }
       if (t.hasAttribute("data-policy-overlay") && e.target === t){ PolicyModal.close(); return; }

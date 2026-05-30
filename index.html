@@ -1119,12 +1119,12 @@ IN CONSIDERATION OF 7 FUNDAYS PARK, located at Unit 3, 213 Service Road West, in
 I have read the above Acknowledgment of Risk, Waiver, and Release of Liability and as Parent / Guardian of the child named above, I hereby accept all terms and conditions contained herein and hereby consent to her/his participation in this activity.`;
 
 const WaiverModal = {
-  open:false, done:false, showErr:false, submitting:false,
-  form:{ children:[""], adults:"", parent:"", phone:"", date:"", signature:"", marketing:false, guardian:false, agree:false },
+  open:false, done:false, showErr:false, submitting:false, step:0, emailErr:false, lookupStatus:null, welcome:null, _cbN:0,
+  form:{ email:"", children:[""], adults:"", parent:"", phone:"", date:"", signature:"", marketing:false, guardian:false, agree:false },
 
   start(){
-    this.open=true; this.done=false; this.showErr=false; this.submitting=false;
-    this.form={ children:[""], adults:"", parent:"", phone:"", date:new Date().toISOString().split("T")[0], signature:"", marketing:false, guardian:false, agree:false };
+    this.open=true; this.done=false; this.showErr=false; this.submitting=false; this.step=0; this.emailErr=false; this.lookupStatus=null; this.welcome=null;
+    this.form={ email:"", children:[""], adults:"", parent:"", phone:"", date:new Date().toISOString().split("T")[0], signature:"", marketing:false, guardian:false, agree:false };
     document.body.style.overflow="hidden"; this.render();
   },
   close(){ this.open=false; document.body.style.overflow=""; const m=document.getElementById("waiver-mount"); if(m) m.innerHTML=""; },
@@ -1145,6 +1145,24 @@ const WaiverModal = {
   addChild(){ this.readDom(); this.form.children.push(""); this.render(); },
   removeChild(i){ this.readDom(); this.form.children.splice(i,1); if(!this.form.children.length) this.form.children.push(""); this.render(); },
   setExpiry(){ const d=this.form.date; if(!d) return ""; const p=d.split("-"); return (parseInt(p[0],10)+1)+"-"+p[1]+"-"+p[2]; },
+  emailValid(){ return /^\S+@\S+\.\S+$/.test(String(this.form.email).trim()); },
+  checkEmail(){
+    const el=document.getElementById("wv-email"); if(el) this.form.email=el.value.trim();
+    if(!this.emailValid()){ this.emailErr=true; this.render(); return; }
+    this.emailErr=false;
+    if(!(WAIVER_ENDPOINT && WAIVER_ENDPOINT.indexOf("http")===0)){ this.step=1; this.render(); return; }
+    this.lookupStatus="checking"; this.render();
+    const self=this, cb="fdwcb"+(++this._cbN); let fin=false, s;
+    const go=()=>{ if(fin)return; fin=true; try{delete window[cb];}catch(e){} if(s&&s.parentNode)s.parentNode.removeChild(s); self.lookupStatus=null; self.step=1; self.render(); };
+    const hit=(res)=>{ if(fin)return; fin=true; try{delete window[cb];}catch(e){} if(s&&s.parentNode)s.parentNode.removeChild(s); self.lookupStatus=null; self.welcome=res; self.render(); };
+    window[cb]=(res)=>{ (res&&res.valid)?hit(res):go(); };
+    s=document.createElement("script");
+    s.src=WAIVER_ENDPOINT+"?action=check&email="+encodeURIComponent(this.form.email)+"&callback="+cb;
+    s.onerror=go; document.body.appendChild(s);
+    setTimeout(go, 2500);
+  },
+  backToEmail(){ this.readDom(); this.step=0; this.welcome=null; this.render(); },
+  resign(){ this.welcome=null; this.step=1; this.render(); },
   errs(){
     const f=this.form,e={};
     if(!f.children.some(c=>String(c).trim())) e.children="Please add at least one child's name";
@@ -1163,7 +1181,7 @@ const WaiverModal = {
     if(Object.keys(this.errs()).length){ this.showErr=true; this.render(); return; }
     this.submitting=true; this.render();
     const kids=this.form.children.map(c=>String(c).trim()).filter(Boolean);
-    const payload={ children:kids.join(", "), childrenCount:kids.length, adults:this.form.adults, parent:this.form.parent, phone:this.form.phone, date:this.form.date, expiry:this.setExpiry(), signature:this.form.signature, marketing:this.form.marketing, guardian:this.form.guardian, agree:this.form.agree, ts:new Date().toISOString(), source:"website" };
+    const payload={ email:this.form.email, children:kids.join(", "), childrenCount:kids.length, adults:this.form.adults, parent:this.form.parent, phone:this.form.phone, date:this.form.date, expiry:this.setExpiry(), signature:this.form.signature, marketing:this.form.marketing, guardian:this.form.guardian, agree:this.form.agree, ts:new Date().toISOString(), source:"website" };
     try{ const k="fd_waivers"; const a=JSON.parse(localStorage.getItem(k)||"[]"); a.push(payload); localStorage.setItem(k,JSON.stringify(a)); }catch(_){}
     let finished=false;
     const finish=()=>{ if(finished) return; finished=true; this.submitting=false; this.done=true; this.render(); };
@@ -1193,6 +1211,10 @@ const WaiverModal = {
           ${f.children.length>1?`<button type="button" data-remove-child="${i}" aria-label="Remove child" style="flex-shrink:0;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--red) 12%,transparent);color:var(--red);font-size:20px;line-height:1;font-weight:800">×</button>`:''}
         </div>`).join("");
     return `<div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:14px">
+        <span>📧</span><span style="font-weight:700;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${String(f.email)||'—'}</span>
+        <button type="button" data-waiver-back style="color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:13.5px">Change</button>
+      </div>
       <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement below, then sign as the parent or legal guardian of your child(ren). One waiver covers all your children and stays valid for one year.</p>
       <div style="max-height:320px;overflow:auto;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:var(--bg);white-space:pre-wrap;margin-bottom:20px">${WAIVER_TEXT}</div>
 
@@ -1240,22 +1262,53 @@ const WaiverModal = {
       <button class="btn btn-primary btn-lg" style="margin-top:16px" data-waiver-close>Done</button>
     </div>`;
   },
+  emailHtml(){
+    const f=this.form;
+    return `<div>
+      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:18px">Enter your email to begin. We keep your signed waiver on file for <strong>one year</strong> — next time, just enter the same email and you're set.</p>
+      ${this.field("Email address", `<input id="wv-email" type="email" value="${String(f.email).replace(/"/g,'&quot;')}" placeholder="you@email.com" class="bk-input" autocomplete="email" />`, "We'll use this to look up and store your waiver.", this.emailErr?"Please enter a valid email":"")}
+      <div class="bk-foot">
+        <a class="btn btn-ghost" href="assets/waiver.pdf" target="_blank" rel="noopener" style="padding:13px 22px;font-size:15px">📄 View PDF</a>
+        <button class="btn btn-primary" style="margin-left:auto" data-waiver-continue ${this.lookupStatus==="checking"?'disabled':''}>${this.lookupStatus==="checking"?'Checking…':'Continue →'}</button>
+      </div>
+    </div>`;
+  },
+  welcomeHtml(){
+    const w=this.welcome||{};
+    const kids = w.children ? w.children : "your family";
+    return `<div style="text-align:center;padding:10px 0 6px">
+      <div style="font-size:54px;animation:bob 1.6s ease-in-out infinite">🎉</div>
+      <h3 class="h-xl" style="font-size:28px;margin-top:8px">You're already covered!</h3>
+      <p style="color:var(--ink-soft);font-size:15.5px;margin-top:10px;max-width:470px;margin-inline:auto">We found a valid waiver on file for <strong style="color:var(--brand)">${String(this.form.email)}</strong>${w.name?`, signed by ${w.name}`:''}. No need to sign again — just check in at the front desk. 🎈</p>
+      <div class="card" style="display:inline-flex;gap:24px;padding:14px 26px;margin-top:20px;box-shadow:none;border:2px solid var(--line);flex-wrap:wrap;justify-content:center">
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">On file for</div><div style="font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--brand)">${kids}</div></div>
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid until</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">${w.expiry||'—'}</div></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-ghost" data-waiver-resign>Sign a new waiver anyway</button>
+        <button class="btn btn-primary" data-waiver-close>Great, done</button>
+      </div>
+    </div>`;
+  },
   render(){
     const m=document.getElementById("waiver-mount");
     if(!m) return;
     if(!this.open){ m.innerHTML=""; return; }
-    const done=this.done;
+    const done=this.done, welcome=this.welcome, step=this.step;
+    const title = done?"Waiver signed!" : welcome?"Welcome back!" : step===0?"Start your waiver" : "Sign your waiver";
+    const sub = done?"You're all set 🎉" : welcome?"You're already covered" : step===0?"Enter your email to begin · valid 1 year" : "Parent / guardian · one waiver per family · valid 1 year";
+    const body = done?this.successHtml() : welcome?this.welcomeHtml() : step===0?this.emailHtml() : this.formHtml();
     m.innerHTML=`<div class="bk-overlay" data-waiver-overlay>
       <div class="card bk-card" style="width:min(680px,100%)">
         <div class="bk-head">
           <img src="assets/badge.png" alt="" />
           <div style="flex:1">
-            <div style="font-family:var(--font-display);font-weight:800;font-size:20px">${done?"Waiver signed!":"Sign your waiver"}</div>
-            <div style="font-size:13.5px;color:rgba(255,255,255,.75)">${done?"You're all set 🎉":"Parent / guardian · one waiver per family · valid 1 year"}</div>
+            <div style="font-family:var(--font-display);font-weight:800;font-size:20px">${title}</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.75)">${sub}</div>
           </div>
           <button class="bk-close" aria-label="Close" data-waiver-close>×</button>
         </div>
-        <div class="bk-body">${done?this.successHtml():this.formHtml()}</div>
+        <div class="bk-body">${body}</div>
       </div>
     </div>`;
   }
@@ -1335,7 +1388,7 @@ const PolicyModal = {
 
     // delegated clicks
     document.body.addEventListener("click", (e) => {
-      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay],[data-add-child],[data-remove-child],[data-policy-close],[data-policy-overlay]");
+      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay],[data-waiver-continue],[data-waiver-back],[data-waiver-resign],[data-add-child],[data-remove-child],[data-policy-close],[data-policy-overlay]");
       if (!t) return;
 
       if (t.hasAttribute("data-scroll")){ e.preventDefault(); if (menu) menu.classList.remove("open"); const tgt=t.getAttribute("data-scroll"); if (tgt==="policy"){ PolicyModal.start(); return; } scrollToId(tgt); return; }
@@ -1345,6 +1398,9 @@ const PolicyModal = {
       if (t.hasAttribute("data-waiver")){ if (menu) menu.classList.remove("open"); WaiverModal.start(); return; }
       if (t.hasAttribute("data-waiver-close")){ WaiverModal.close(); return; }
       if (t.hasAttribute("data-waiver-submit")){ WaiverModal.submit(); return; }
+      if (t.hasAttribute("data-waiver-continue")){ WaiverModal.checkEmail(); return; }
+      if (t.hasAttribute("data-waiver-back")){ WaiverModal.backToEmail(); return; }
+      if (t.hasAttribute("data-waiver-resign")){ WaiverModal.resign(); return; }
       if (t.hasAttribute("data-add-child")){ WaiverModal.addChild(); return; }
       if (t.hasAttribute("data-remove-child")){ WaiverModal.removeChild(parseInt(t.getAttribute("data-remove-child"),10)); return; }
       if (t.hasAttribute("data-waiver-overlay") && e.target === t){ WaiverModal.close(); return; }

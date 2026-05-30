@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="360" height="360" role="img" aria-label="Children playing illustration">
+  <defs>
+    <radialGradient id="kglow" cx="0.5" cy="0.42" r="0.6">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9eefb"/>
+    </radialGradient>
+  </defs>
+  <rect width="360" height="360" fill="url(#kglow)"/>
+  <!-- floor arc -->
+  <path d="M0 300 Q180 268 360 300 L360 360 L0 360 Z" fill="#f6e7cf"/>
+  <!-- confetti / balls -->
+  <g>
+    <circle cx="60" cy="70" r="12" fill="#e4453c"/><circle cx="300" cy="84" r="14" fill="#2fb9ac"/>
+    <circle cx="330" cy="180" r="10" fill="#e2a93c"/><circle cx="40" cy="200" r="10" fill="#8c53a6"/>
+    <path d="M180 36 l4 9 9 1 -7 7 2 9 -8 -4 -8 4 2 -9 -7 -7 9 -1z" fill="#f2c33c"/>
+    <path d="M86 300 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1z" fill="#2ba7e2" opacity=".8"/>
+  </g>
+  <!-- balloons -->
+  <g>
+    <path d="M268 150 q7 12 0 24" stroke="#c9b48f" stroke-width="1.6" fill="none"/>
+    <ellipse cx="268" cy="132" rx="20" ry="24" fill="#e0277e"/>
+    <ellipse cx="262" cy="124" rx="5" ry="7" fill="#ffffff" opacity=".4"/>
+  </g>
+  <!-- left kid (arms up) -->
+  <g transform="translate(130,196)">
+    <rect x="-13" y="40" width="11" height="30" rx="5.5" fill="#3a4a6b"/>
+    <rect x="3" y="40" width="11" height="30" rx="5.5" fill="#3a4a6b"/>
+    <rect x="-22" y="0" width="44" height="46" rx="20" fill="#2ba7e2"/>
+    <rect x="-34" y="-8" width="14" height="34" rx="7" fill="#2ba7e2" transform="rotate(-38 -27 9)"/>
+    <rect x="20" y="-8" width="14" height="34" rx="7" fill="#2ba7e2" transform="rotate(38 27 9)"/>
+    <circle cx="0" cy="-22" r="23" fill="#f6c89a"/>
+    <path d="M-23 -25 a23 23 0 0 1 46 0 q-23 -13 -46 0z" fill="#5b3b22"/>
+    <circle cx="-8" cy="-22" r="3" fill="#2a2a2a"/><circle cx="8" cy="-22" r="3" fill="#2a2a2a"/>
+    <path d="M-8 -11 q8 8 16 0" stroke="#2a2a2a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <circle cx="-15" cy="-13" r="3.5" fill="#f4a7b6" opacity=".6"/><circle cx="15" cy="-13" r="3.5" fill="#f4a7b6" opacity=".6"/>
+  </g>
+  <!-- right kid (holding ball) -->
+  <g transform="translate(232,210)">
+    <rect x="-12" y="36" width="10" height="28" rx="5" fill="#444"/>
+    <rect x="3" y="36" width="10" height="28" rx="5" fill="#444"/>
+    <rect x="-20" y="0" width="40" height="42" rx="18" fill="#7cb82f"/>
+    <rect x="-30" y="6" width="13" height="30" rx="6.5" fill="#7cb82f" transform="rotate(28 -23 20)"/>
+    <rect x="17" y="6" width="13" height="30" rx="6.5" fill="#7cb82f" transform="rotate(-28 23 20)"/>
+    <circle cx="0" cy="34" r="14" fill="#e4453c"/>
+    <circle cx="0" cy="-20" r="21" fill="#f6c89a"/>
+    <path d="M-21 -22 a21 21 0 0 1 42 0 q-21 -12 -42 0z" fill="#2a2a2a"/>
+    <circle cx="-7" cy="-20" r="2.8" fill="#2a2a2a"/><circle cx="7" cy="-20" r="2.8" fill="#2a2a2a"/>
+    <path d="M-7 -10 q7 7 14 0" stroke="#2a2a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

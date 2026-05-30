@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Birthday party room illustration">
+  <defs>
+    <linearGradient id="pwall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3f8"/><stop offset="1" stop-color="#fdeed6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#pwall)"/>
+  <!-- bunting -->
+  <path d="M14 26 Q200 70 386 26" fill="none" stroke="#c9b48f" stroke-width="2"/>
+  <g>
+    <path d="M40 34 l18 0 -9 18 z" fill="#e4453c"/>
+    <path d="M84 42 l18 0 -9 18 z" fill="#e2a93c"/>
+    <path d="M132 50 l18 0 -9 18 z" fill="#7cb82f"/>
+    <path d="M182 54 l18 0 -9 18 z" fill="#2ba7e2"/>
+    <path d="M232 54 l18 0 -9 18 z" fill="#8c53a6"/>
+    <path d="M282 50 l18 0 -9 18 z" fill="#e0277e"/>
+    <path d="M330 42 l18 0 -9 18 z" fill="#2fb9ac"/>
+  </g>
+  <!-- floor -->
+  <path d="M0 232 H400 V300 H0 Z" fill="#f0ddc0"/>
+  <!-- table -->
+  <rect x="96" y="196" width="208" height="20" rx="8" fill="#e9cfa6"/>
+  <rect x="112" y="216" width="12" height="34" rx="4" fill="#caa873"/>
+  <rect x="276" y="216" width="12" height="34" rx="4" fill="#caa873"/>
+  <!-- cake -->
+  <g transform="translate(200,196)">
+    <rect x="-44" y="-34" width="88" height="34" rx="8" fill="#fff5fb"/>
+    <rect x="-44" y="-34" width="88" height="10" rx="5" fill="#e0277e"/>
+    <path d="M-44 -24 q11 8 22 0 q11 -8 22 0 q11 8 22 0 q11 -8 22 0 l0 6 q-11 8 -22 0 q-11 -8 -22 0 q-11 8 -22 0 q-11 -8 -22 0z" fill="#f4a7b6"/>
+    <rect x="-30" y="-56" width="5" height="22" rx="2" fill="#2ba7e2"/>
+    <rect x="-2.5" y="-58" width="5" height="24" rx="2" fill="#7cb82f"/>
+    <rect x="25" y="-56" width="5" height="22" rx="2" fill="#e2a93c"/>
+    <g fill="#f2c33c"><ellipse cx="-27.5" cy="-60" rx="3" ry="5"/><ellipse cx="0" cy="-62" rx="3" ry="5"/><ellipse cx="27.5" cy="-60" rx="3" ry="5"/></g>
+  </g>
+  <!-- cups -->
+  <path d="M120 196 l4 -20 14 0 4 20 z" fill="#2ba7e2"/>
+  <path d="M262 196 l4 -20 14 0 4 20 z" fill="#7cb82f"/>
+  <!-- balloons -->
+  <g>
+    <path d="M48 150 q7 14 0 28" stroke="#c9b48f" stroke-width="1.6" fill="none"/>
+    <ellipse cx="48" cy="128" rx="22" ry="26" fill="#e4453c"/>
+    <ellipse cx="40" cy="118" rx="5" ry="8" fill="#fff" opacity=".4"/>
+    <path d="M352 150 q7 14 0 28" stroke="#c9b48f" stroke-width="1.6" fill="none"/>
+    <ellipse cx="352" cy="128" rx="22" ry="26" fill="#8c53a6"/>
+    <ellipse cx="344" cy="118" rx="5" ry="8" fill="#fff" opacity=".4"/>
+    <path d="M86 170 q5 10 0 20" stroke="#c9b48f" stroke-width="1.4" fill="none"/>
+    <ellipse cx="86" cy="156" rx="14" ry="17" fill="#2fb9ac"/>
+  </g>
+  <!-- confetti -->
+  <g>
+    <rect x="150" y="92" width="8" height="8" rx="2" fill="#e2a93c" transform="rotate(20 154 96)"/>
+    <rect x="244" y="100" width="8" height="8" rx="2" fill="#2ba7e2" transform="rotate(-15 248 104)"/>
+    <circle cx="200" cy="96" r="4" fill="#e0277e"/>
+    <circle cx="300" cy="120" r="4" fill="#7cb82f"/>
+    <circle cx="110" cy="120" r="4" fill="#e4453c"/>
+  </g>
+</svg>

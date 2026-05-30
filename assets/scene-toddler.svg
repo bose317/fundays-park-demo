@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Toddler soft-play area illustration">
+  <defs>
+    <linearGradient id="twall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8f7f4"/><stop offset="1" stop-color="#f3fbf9"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#twall)"/>
+  <!-- soft padded floor -->
+  <path d="M0 234 H400 V300 H0 Z" fill="#bfe9e1"/>
+  <rect x="0" y="228" width="400" height="10" fill="#a6ddd3"/>
+  <!-- soft fence (rounded posts) -->
+  <g fill="#2fb9ac">
+    <rect x="24" y="200" width="12" height="34" rx="6"/><rect x="52" y="200" width="12" height="34" rx="6"/>
+    <rect x="80" y="200" width="12" height="34" rx="6"/>
+  </g>
+  <rect x="22" y="204" width="74" height="8" rx="4" fill="#7cd3c6"/>
+  <!-- soft blocks -->
+  <rect x="120" y="196" width="40" height="40" rx="9" fill="#e4453c"/>
+  <rect x="120" y="196" width="40" height="40" rx="9" fill="none" stroke="#c63a32" stroke-width="2"/>
+  <rect x="164" y="206" width="30" height="30" rx="8" fill="#e2a93c"/>
+  <rect x="134" y="160" width="34" height="34" rx="8" fill="#2ba7e2"/>
+  <!-- tiny slide -->
+  <g>
+    <path d="M300 150 L300 234 L356 234 Z" fill="#f2913a"/>
+    <path d="M300 150 C 300 150, 252 168, 248 234 L268 234 C 272 182, 312 168, 312 162 Z" fill="#e0277e"/>
+    <rect x="294" y="140" width="14" height="20" rx="6" fill="#8c53a6"/>
+  </g>
+  <!-- toddler -->
+  <g transform="translate(214,196)">
+    <rect x="-11" y="22" width="9" height="16" rx="4.5" fill="#3a4a6b"/>
+    <rect x="2" y="22" width="9" height="16" rx="4.5" fill="#3a4a6b"/>
+    <rect x="-15" y="2" width="30" height="26" rx="13" fill="#7cb82f"/>
+    <rect x="-23" y="6" width="9" height="18" rx="4.5" fill="#7cb82f" transform="rotate(-26 -18 15)"/>
+    <rect x="14" y="6" width="9" height="18" rx="4.5" fill="#7cb82f" transform="rotate(26 18 15)"/>
+    <circle cx="0" cy="-12" r="15" fill="#f6c89a"/>
+    <path d="M-15 -15 a15 15 0 0 1 30 0 q-15 -8 -30 0z" fill="#5b3b22"/>
+    <circle cx="-5" cy="-12" r="2" fill="#2a2a2a"/><circle cx="5" cy="-12" r="2" fill="#2a2a2a"/>
+    <path d="M-4 -6 q4 4 8 0" stroke="#2a2a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <circle cx="-9" cy="-7" r="2.6" fill="#f4a7b6" opacity=".6"/><circle cx="9" cy="-7" r="2.6" fill="#f4a7b6" opacity=".6"/>
+  </g>
+  <!-- soft balls -->
+  <circle cx="186" cy="224" r="11" fill="#8c53a6"/>
+  <circle cx="262" cy="222" r="10" fill="#2ba7e2"/>
+  <!-- star + cloud -->
+  <path d="M70 70 l4 9 9 1 -7 7 2 9 -8 -4 -8 4 2 -9 -7 -7 9 -1z" fill="#f2c33c"/>
+  <g fill="#ffffff"><ellipse cx="300" cy="60" rx="26" ry="15"/><ellipse cx="322" cy="54" rx="18" ry="12"/></g>
+</svg>

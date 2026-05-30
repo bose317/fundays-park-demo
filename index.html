@@ -241,7 +241,7 @@ ul{ margin:0; }
 @media(max-width:820px){ .price-grid{ grid-template-columns:1fr!important; } .price-grid .card{ transform:none!important; } .pass-grid{ grid-template-columns:1fr!important; } }
 @media(max-width:920px){ .pkg-grid{ grid-template-columns:1fr!important; max-width:460px; margin-inline:auto; } }
 @media(max-width:860px){ .visit-grid{ grid-template-columns:1fr!important; } .about-grid{ grid-template-columns:1fr!important; } .faq-grid{ grid-template-columns:1fr!important; } }
-@media(max-width:760px){ .gal-grid{ grid-template-columns:repeat(2,1fr)!important; } }
+@media(max-width:820px){ .gal-grid{ grid-template-columns:1fr!important; max-width:460px; margin-inline:auto; } }
 @media(max-width:880px){ .footer-grid{ grid-template-columns:1fr 1fr!important; } }
 @media(max-width:560px){ .footer-grid{ grid-template-columns:1fr!important; } }
 @media(max-width:520px){ .bk-row{ grid-template-columns:1fr!important; } }
@@ -408,6 +408,10 @@ function DotField(color, opacity){
 function Ph(label, style, cls){
   return `<div class="ph ${cls||''}" style="${style||''}"><span>${label}</span></div>`;
 }
+/* illustrated scene tile (SVG art behind a rounded, clipped frame) */
+function Scene(src, style, cls){
+  return `<div class="${cls||''}" style="position:relative;overflow:hidden;background:var(--surface);${style||''}"><img src="assets/${src}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" /></div>`;
+}
 function FloatingShapes(){
   const items = [
     { type:"balloon", c:"var(--red)",   size:50, top:"14%", left:"5%",  anim:"floaty-slow", d:"0s" },
@@ -491,8 +495,8 @@ function Hero(){
         </div>
       </div>
       <div class="hero-visual" style="position:relative">
-        <div class="float" style="position:relative;z-index:2">${Ph("hall wide shot","aspect-ratio:4/3;border-radius:28px;box-shadow:var(--shadow-lift)")}</div>
-        <div class="float-2" style="position:absolute;bottom:-34px;left:-34px;width:46%;z-index:3">${Ph("kids playing","aspect-ratio:1;border-radius:22px;box-shadow:var(--shadow-lift);background:var(--surface)")}</div>
+        <div class="float" style="position:relative;z-index:2">${Scene("scene-hall.svg","aspect-ratio:4/3;border-radius:28px;box-shadow:var(--shadow-lift)")}</div>
+        <div class="float-2" style="position:absolute;bottom:-34px;left:-34px;width:46%;z-index:3">${Scene("scene-kids.svg","aspect-ratio:1;border-radius:22px;box-shadow:var(--shadow-lift)")}</div>
         <img src="assets/badge.png" alt="" class="float" style="position:absolute;top:-46px;right:-28px;width:130px;z-index:4;filter:drop-shadow(0 16px 22px rgba(0,0,0,.25))" />
         ${Balloon("var(--red)",56,"position:absolute;bottom:40px;right:-34px;z-index:1","floaty-slow")}
         ${Balloon("var(--teal)",44,"position:absolute;top:90px;left:-42px;z-index:1","floaty")}
@@ -510,7 +514,10 @@ function Attractions(){
       ${SectionHead({ eyebrow:"The Play", title:"Eight worlds of giggles", lead:"From wobbly first steps to high-energy big kids, every corner has an adventure waiting." })}
       <div class="attr-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
         ${D.attractions.map((a,i) => `<div class="card lift reveal" data-delay="${(i%4)*80}" style="overflow:hidden;display:flex;flex-direction:column">
-          ${Ph(a.ph,"aspect-ratio:4/3;border-radius:0")}
+          <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(140deg, color-mix(in srgb,${a.color} 30%, var(--surface)), color-mix(in srgb,${a.color} 8%, var(--surface)))">
+            ${DotField(a.color,0.18)}
+            <span style="font-size:62px;position:relative;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14))">${a.emoji}</span>
+          </div>
           <div style="padding:20px 20px 24px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
               <span style="font-size:26px">${a.emoji}</span>
@@ -652,7 +659,7 @@ function Visit(){
           </div>
         </div>
         <div class="reveal" style="position:relative">
-          ${Ph("map / building exterior","aspect-ratio:1/1.04;border-radius:28px;box-shadow:var(--shadow-lift)")}
+          ${Scene("scene-building.svg","aspect-ratio:1/1.04;border-radius:28px;box-shadow:var(--shadow-lift)")}
           ${Star(30,"var(--gold)","position:absolute;top:-12px;left:-12px;animation:wiggle 4s ease-in-out infinite")}
         </div>
       </div>
@@ -666,7 +673,7 @@ function About(){
   return `<section class="section" id="about">
     <div class="wrap about-grid" style="display:grid;grid-template-columns:.9fr 1.1fr;gap:46px;align-items:center">
       <div class="reveal" style="position:relative">
-        ${Ph("founder family photo","aspect-ratio:4/5;border-radius:28px;box-shadow:var(--shadow-lift)")}
+        ${Scene("scene-about.svg","aspect-ratio:4/5;border-radius:28px;box-shadow:var(--shadow-lift)")}
         <img src="assets/badge.png" alt="" class="float" style="position:absolute;bottom:-24px;right:-22px;width:110px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.2))" />
         ${Sparkle(26,"var(--pink)","position:absolute;top:-10px;left:-10px;animation:wiggle 3.5s ease-in-out infinite")}
       </div>
@@ -693,9 +700,10 @@ function Gallery(){
   return `<section class="section" id="gallery" style="padding-top:0">
     <div class="wrap">
       ${SectionHead({ center:true, eyebrow:"Gallery", title:"See the giggles in action", lead:"(Swap these for your real photos later)" })}
-      <div class="gal-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;grid-auto-rows:1fr">
-        ${D.gallery.map((g,i) => `<div class="reveal" data-delay="${(i%4)*60}" style="grid-column:${i===0||i===5?'span 2':'span 1'};grid-row:${i===0||i===5?'span 2':'span 1'}">
-          ${Ph(g,"width:100%;height:100%;min-height:130px;border-radius:18px")}
+      <div class="gal-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+        ${D.gallery.map((g,i) => `<div class="reveal" data-delay="${i*80}" style="position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow)">
+          ${Scene(["scene-hall.svg","scene-toddler.svg","scene-party.svg"][i] || "scene-hall.svg","aspect-ratio:4/3;border-radius:0")}
+          <span style="position:absolute;left:12px;bottom:12px;background:var(--surface);color:var(--brand);font-family:var(--font-display);font-weight:700;font-size:13.5px;padding:6px 12px;border-radius:999px;box-shadow:0 4px 10px -6px rgba(0,0,0,.3)">${g}</span>
         </div>`).join("")}
       </div>
     </div>

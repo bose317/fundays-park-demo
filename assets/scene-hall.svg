@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Indoor play hall illustration">
+  <defs>
+    <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d7eefb"/><stop offset="1" stop-color="#eef8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#hsky)"/>
+  <!-- sun -->
+  <circle cx="356" cy="44" r="30" fill="#f2c33c" opacity="0.85"/>
+  <!-- clouds -->
+  <g fill="#ffffff">
+    <ellipse cx="70" cy="50" rx="26" ry="16"/><ellipse cx="92" cy="44" rx="20" ry="14"/>
+    <ellipse cx="250" cy="38" rx="22" ry="13"/><ellipse cx="270" cy="44" rx="16" ry="11"/>
+  </g>
+  <!-- floor -->
+  <path d="M0 236 H400 V300 H0 Z" fill="#f6e7cf"/>
+  <rect x="0" y="232" width="400" height="8" fill="#ecd9b8"/>
+  <!-- grain-elevator climbing tower -->
+  <g>
+    <rect x="48" y="120" width="92" height="118" rx="10" fill="#e2a93c"/>
+    <rect x="48" y="120" width="92" height="118" rx="10" fill="none" stroke="#c98f29" stroke-width="3"/>
+    <path d="M44 122 L94 86 L144 122 Z" fill="#e4453c"/>
+    <rect x="60" y="150" width="22" height="22" rx="4" fill="#1b3a73"/>
+    <rect x="106" y="150" width="22" height="22" rx="4" fill="#1b3a73"/>
+    <rect x="60" y="186" width="22" height="22" rx="4" fill="#2ba7e2"/>
+    <rect x="106" y="186" width="22" height="22" rx="4" fill="#2ba7e2"/>
+    <rect x="86" y="62" width="4" height="26" fill="#8a6b1f"/>
+    <path d="M90 64 l22 7 l-22 7 Z" fill="#2fb9ac"/>
+  </g>
+  <!-- wave slide -->
+  <path d="M140 160 C 190 168, 196 214, 250 224 L250 240 C 190 232, 176 188, 140 184 Z" fill="#f2913a"/>
+  <path d="M140 160 C 190 168, 196 214, 250 224" fill="none" stroke="#e07b22" stroke-width="3"/>
+  <!-- ball pit -->
+  <rect x="232" y="198" width="150" height="48" rx="16" fill="#bfe4f6"/>
+  <rect x="232" y="190" width="150" height="16" rx="8" fill="#9fd2ee"/>
+  <g>
+    <circle cx="252" cy="206" r="8" fill="#e4453c"/><circle cx="272" cy="212" r="8" fill="#7cb82f"/>
+    <circle cx="292" cy="204" r="8" fill="#e2a93c"/><circle cx="312" cy="212" r="8" fill="#8c53a6"/>
+    <circle cx="332" cy="205" r="8" fill="#2fb9ac"/><circle cx="352" cy="212" r="8" fill="#e0277e"/>
+    <circle cx="262" cy="224" r="8" fill="#f2913a"/><circle cx="300" cy="226" r="8" fill="#2ba7e2"/>
+    <circle cx="340" cy="224" r="8" fill="#7cb82f"/><circle cx="372" cy="216" r="8" fill="#e4453c"/>
+  </g>
+  <!-- balloons -->
+  <g>
+    <path d="M300 70 q6 9 0 18" stroke="#c9b48f" stroke-width="1.4" fill="none"/>
+    <ellipse cx="300" cy="58" rx="14" ry="16" fill="#e4453c"/>
+    <path d="M340 92 q5 8 0 16" stroke="#c9b48f" stroke-width="1.4" fill="none"/>
+    <ellipse cx="340" cy="80" rx="12" ry="14" fill="#2fb9ac"/>
+  </g>
+  <!-- kid jumping (center) -->
+  <g transform="translate(196,150)">
+    <rect x="-16" y="22" width="7" height="16" rx="3.5" fill="#3a4a6b" transform="rotate(-12 -12 30)"/>
+    <rect x="9" y="22" width="7" height="16" rx="3.5" fill="#3a4a6b" transform="rotate(12 12 30)"/>
+    <rect x="-13" y="0" width="26" height="28" rx="13" fill="#e0277e"/>
+    <rect x="-22" y="-4" width="9" height="20" rx="4.5" fill="#e0277e" transform="rotate(-40 -17 6)"/>
+    <rect x="13" y="-4" width="9" height="20" rx="4.5" fill="#e0277e" transform="rotate(40 17 6)"/>
+    <circle cx="0" cy="-13" r="13" fill="#f6c89a"/>
+    <path d="M-13 -15 a13 13 0 0 1 26 0 q-13 -7 -26 0z" fill="#5b3b22"/>
+    <circle cx="-4.5" cy="-13" r="1.7" fill="#2a2a2a"/><circle cx="4.5" cy="-13" r="1.7" fill="#2a2a2a"/>
+    <path d="M-4 -7 q4 4 8 0" stroke="#2a2a2a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </g>
+  <!-- kid by ball pit (peeking) -->
+  <g transform="translate(300,178)">
+    <rect x="-12" y="0" width="24" height="22" rx="11" fill="#2ba7e2"/>
+    <rect x="-19" y="0" width="8" height="16" rx="4" fill="#2ba7e2" transform="rotate(-30 -15 8)"/>
+    <rect x="11" y="0" width="8" height="16" rx="4" fill="#2ba7e2" transform="rotate(30 15 8)"/>
+    <circle cx="0" cy="-12" r="12" fill="#f6c89a"/>
+    <path d="M-12 -14 a12 12 0 0 1 24 0 q-12 -7 -24 0z" fill="#2a2a2a"/>
+    <circle cx="-4" cy="-12" r="1.6" fill="#2a2a2a"/><circle cx="4" cy="-12" r="1.6" fill="#2a2a2a"/>
+    <path d="M-4 -6 q4 4 8 0" stroke="#2a2a2a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  </g>
+  <!-- stars -->
+  <g fill="#f2c33c">
+    <path d="M160 70 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z"/>
+  </g>
+</svg>

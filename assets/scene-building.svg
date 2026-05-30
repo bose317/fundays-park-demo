@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="7 Fundays Park building exterior illustration">
+  <defs>
+    <linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdedfb"/><stop offset="1" stop-color="#eaf7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bsky)"/>
+  <!-- sun -->
+  <circle cx="60" cy="62" r="34" fill="#f2c33c" opacity="0.9"/>
+  <!-- clouds -->
+  <g fill="#ffffff">
+    <ellipse cx="300" cy="70" rx="34" ry="19"/><ellipse cx="328" cy="62" rx="22" ry="15"/>
+    <ellipse cx="150" cy="110" rx="26" ry="14"/>
+  </g>
+  <!-- distant grain elevator (prairie) -->
+  <g opacity="0.9">
+    <rect x="40" y="150" width="48" height="120" rx="6" fill="#d99f33"/>
+    <path d="M38 152 L64 124 L90 152 Z" fill="#c0392f"/>
+    <rect x="52" y="178" width="10" height="12" fill="#1b3a73"/><rect x="68" y="178" width="10" height="12" fill="#1b3a73"/>
+  </g>
+  <!-- wheat -->
+  <g stroke="#c79a3a" stroke-width="2" fill="none">
+    <path d="M104 300 q-2 -22 0 -34 M104 280 q-8 -4 -10 -12 M104 280 q8 -4 10 -12"/>
+    <path d="M118 300 q-2 -22 0 -34 M118 280 q-8 -4 -10 -12 M118 280 q8 -4 10 -12"/>
+  </g>
+  <!-- ground -->
+  <path d="M0 300 H400 V400 H0 Z" fill="#7cb82f"/>
+  <rect x="0" y="296" width="400" height="10" fill="#6aa525"/>
+  <!-- main building -->
+  <rect x="150" y="170" width="210" height="130" rx="10" fill="#ffffff"/>
+  <rect x="150" y="170" width="210" height="130" rx="10" fill="none" stroke="#dfeaf5" stroke-width="3"/>
+  <!-- roof / sign band -->
+  <rect x="140" y="150" width="230" height="34" rx="10" fill="#1b3a73"/>
+  <g font-family="'Baloo 2',Arial,sans-serif" font-weight="800" font-size="20" text-anchor="middle">
+    <text x="200" y="173" fill="#2ba7e2">7</text>
+    <text x="218" y="173" fill="#e0277e">F</text>
+    <text x="230" y="173" fill="#e2a93c">U</text>
+    <text x="244" y="173" fill="#7cb82f">N</text>
+    <text x="258" y="173" fill="#8c53a6">D</text>
+    <text x="272" y="173" fill="#2fb9ac">A</text>
+    <text x="285" y="173" fill="#f2913a">Y</text>
+    <text x="298" y="173" fill="#e4453c">S</text>
+    <text x="330" y="173" fill="#ffffff">PARK</text>
+  </g>
+  <!-- door -->
+  <rect x="232" y="232" width="46" height="68" rx="6" fill="#2ba7e2"/>
+  <rect x="238" y="240" width="34" height="40" rx="4" fill="#bfe4f6"/>
+  <circle cx="270" cy="266" r="2.6" fill="#1b3a73"/>
+  <!-- windows -->
+  <rect x="168" y="206" width="44" height="40" rx="6" fill="#bfe4f6"/>
+  <rect x="168" y="206" width="44" height="40" rx="6" fill="none" stroke="#9fd2ee" stroke-width="2"/>
+  <rect x="298" y="206" width="44" height="40" rx="6" fill="#bfe4f6"/>
+  <rect x="298" y="206" width="44" height="40" rx="6" fill="none" stroke="#9fd2ee" stroke-width="2"/>
+  <!-- awning -->
+  <path d="M160 200 h190 l-10 16 h-170 z" fill="#e4453c"/>
+  <!-- balloons by door -->
+  <g>
+    <path d="M210 300 q5 -10 0 -22" stroke="#c9b48f" stroke-width="1.4" fill="none"/>
+    <ellipse cx="210" cy="272" rx="11" ry="13" fill="#e0277e"/>
+    <ellipse cx="300" cy="280" rx="10" ry="12" fill="#f2c33c"/>
+    <path d="M300 300 q4 -8 0 -16" stroke="#c9b48f" stroke-width="1.4" fill="none"/>
+  </g>
+  <!-- location pin -->
+  <g transform="translate(330,120)">
+    <path d="M0 0 C 14 0 14 18 0 30 C -14 18 -14 0 0 0 Z" fill="#e4453c"/>
+    <circle cx="0" cy="11" r="6" fill="#fff"/>
+  </g>
+</svg>

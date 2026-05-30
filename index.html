@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>7 Fundays Park · Langham, SK</title>
-<meta name="description" content="Langham's indoor prairie playground — a three-storey grain-elevator climber, a wheatfield ball ocean and a rocket trampoline bay. Book a birthday party online. Rain or snow, we're playing." />
+<meta name="description" content="Langham's indoor prairie playground — a towering grain-elevator climber, a wheatfield ball ocean and a rocket trampoline bay. Book a birthday party online. Rain or snow, we're playing." />
 <link rel="icon" type="image/png" href="assets/badge.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -163,18 +163,18 @@ ul{ margin:0; }
 .nav.scrolled{ box-shadow:0 10px 30px -20px rgba(20,44,88,.5); }
 .nav-inner{ display:flex; align-items:center; gap:18px; height:74px; }
 .nav-logo{ display:flex; align-items:center; gap:11px; font-family:var(--font-display); font-weight:800; color:var(--brand); font-size:20px; }
-.nav-logo img{ height:46px; width:auto; }
-.nav-links{ display:flex; align-items:center; gap:4px; margin-left:auto; }
+.nav-logo img{ height:60px; width:auto; }
+.nav-links{ display:flex; align-items:center; gap:2px; margin-left:auto; }
 .nav-links a{
-  font-family:var(--font-display); font-weight:600; font-size:15.5px; color:var(--ink);
-  padding:9px 14px; border-radius:999px; transition:calc(var(--motion)*.15s) all; white-space:nowrap;
+  font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--ink);
+  padding:9px 12px; border-radius:999px; transition:calc(var(--motion)*.15s) all; white-space:nowrap;
 }
 .nav-links a:hover{ background:color-mix(in srgb,var(--accent) 14%, transparent); color:var(--accent); }
 .nav-cta{ margin-left:6px; }
 .nav-burger{ display:none; margin-left:auto; width:46px;height:46px;border-radius:14px; background:var(--surface); box-shadow:var(--shadow); align-items:center;justify-content:center; }
 .nav-burger span,.nav-burger span::before,.nav-burger span::after{ content:""; display:block; width:22px;height:2.6px;border-radius:2px;background:var(--brand); position:relative; transition:.2s; }
 .nav-burger span::before{ position:absolute; top:-7px; } .nav-burger span::after{ position:absolute; top:7px; }
-@media (max-width:1080px){
+@media (max-width:1200px){
   .nav-links{ display:none; }
   .nav-burger{ display:flex; }
 }
@@ -245,6 +245,9 @@ ul{ margin:0; }
 @media(max-width:880px){ .footer-grid{ grid-template-columns:1fr 1fr!important; } }
 @media(max-width:560px){ .footer-grid{ grid-template-columns:1fr!important; } }
 @media(max-width:520px){ .bk-row{ grid-template-columns:1fr!important; } }
+@media(max-width:860px){ .policy-grid{ grid-template-columns:1fr!important; } }
+@media(max-width:600px){ .arc-grid{ grid-template-columns:1fr!important; gap:18px!important; } }
+@media(max-width:560px){ .adm-row, .adm-headrow{ grid-template-columns:1.4fr .8fr 1fr!important; padding-left:16px!important; padding-right:16px!important; } .adm-who-sub{ display:none; } }
 </style>
 </head>
 <body>
@@ -261,7 +264,8 @@ const SITE_DATA = {
     tagline: "Langham's indoor prairie playground",
     phone: "(306) 555-7373",
     email: "hello@7fundayspark.ca",
-    address: "112 Railway Avenue, Langham, SK  S0K 2L0",
+    address: "Unit 3, 213 Service Road West, Langham, SK  S0K 0E7",
+    legal: "FunFusion Greenfairway Ventures Ltd.",
     social: { instagram: "@7fundayspark", facebook: "/7fundayspark", tiktok: "@7fundayspark" }
   },
   hours: [
@@ -273,13 +277,13 @@ const SITE_DATA = {
     { day: "Holidays", time: "9:00 – 6:00" }
   ],
   stats: [
-    { num: "10,000", unit: "sq ft", label: "of indoor play" },
-    { num: "3", unit: "levels", label: "giant climbing tower" },
+    { num: "3,000", unit: "sq ft", label: "of indoor play" },
+    { num: "1", unit: "level", label: "everything in view" },
     { num: "365", unit: "days", label: "warm, rain or shine" }
   ],
   attractions: [
     { key:"elevator", emoji:"🌾", title:"Grain Elevator Climber", color:"var(--gold)",
-      desc:"A three-storey soft-play maze inspired by prairie grain elevators — tunnels, rope nets and wobble bridges all the way up.", ph:"main climber photo", tag:"Ages 5–12" },
+      desc:"A multi-level soft-play maze inspired by prairie grain elevators — tunnels, rope nets and wobble bridges all the way up.", ph:"main climber photo", tag:"Ages 5–12" },
     { key:"slides", emoji:"🛝", title:"Speedway Slides", color:"var(--red)",
       desc:"Four side-by-side wave slides plus a spiral black-hole tube. Race a friend to the bottom!", ph:"slides photo", tag:"All ages" },
     { key:"ballpit", emoji:"🟡", title:"Wheatfield Ball Ocean", color:"var(--green)",
@@ -295,33 +299,36 @@ const SITE_DATA = {
     { key:"sensory", emoji:"✨", title:"Quiet Sensory Room", color:"var(--pink)",
       desc:"A soft-lit, low-stimulation space for little ones who need a breather.", ph:"sensory room photo", tag:"Inclusive" }
   ],
-  pricing: [
-    { name:"Weekday Play", price:"14", unit:"/ child", note:"Tue–Thu · all-day, no time limit",
-      perks:["Every attraction included","Grip socks available on-site","Accompanying adults free"], color:"var(--sky)", featured:false },
-    { name:"Weekend & Holiday", price:"18", unit:"/ child", note:"Fri–Sun and holidays",
-      perks:["Every attraction included","Re-entry valid same day","One free adult per child"], color:"var(--gold)", featured:true },
-    { name:"Little Sprout (0–2)", price:"8", unit:"/ tot", note:"Toddler zone + full park",
-      perks:["Little Sprouts priority","Padded, safe environment","Accompanying adults free"], color:"var(--teal)", featured:false }
+  admission: {
+    note: "Accompanying adults are free (1–2 per child) · Grip socks required for everyone.",
+    rows: [
+      { who:"Infants", sub:"Under 1", weekday:"FREE", weekend:"FREE", color:"var(--teal)", emoji:"👶" },
+      { who:"Toddlers", sub:"Under 3", weekday:"$10", weekend:"$12", color:"var(--green)", emoji:"🧸" },
+      { who:"Older Children", sub:"Ages 3–12", weekday:"$12", weekend:"$15", color:"var(--sky)", emoji:"🛝" },
+      { who:"Adults", sub:"1–2 per child", weekday:"FREE", weekend:"FREE", color:"var(--gold)", emoji:"🧑" }
+    ]
+  },
+  arcade: [
+    { label:"Arcade Tokens", detail:"$1 = 3 · $5 = 16 · $20 = 80", emoji:"🪙" },
+    { label:"Quick Bites", detail:"Snacks $2+ · Drinks $2+", emoji:"🍿" },
+    { label:"Snack Combo", detail:"$3.50+ (juice + snack)", emoji:"🥤" }
   ],
   passes: [
-    { name:"10-Play Punch Pass", price:"120", save:"Save $40", desc:"Ten visits bundled, shareable across the family, never expires." },
-    { name:"Monthly Membership", price:"45", unit:"/ mo", desc:"Unlimited play all month, 10% off coffee and 10% off birthday parties." }
+    { name:"10-Visit Punch Pass", emoji:"🎟️", desc:"Ten visits bundled — shareable across the family.",
+      tiers:[ { label:"Under 3", price:"$80" }, { label:"Ages 3+", price:"$100" } ] },
+    { name:"Monthly Unlimited Pass", emoji:"♾️", desc:"Unlimited play, all month long.",
+      tiers:[ { label:"Under 3", price:"$60" }, { label:"Ages 3+", price:"$70" } ] }
   ],
   packages: [
-    { key:"sprout", name:"Little Sprout Party", emoji:"🌱", color:"var(--teal)",
-      price:"189", kids:"Up to 8 kids", duration:"1.5 hours",
-      blurb:"A cozy little gathering, perfect for toddlers and first-time party families.",
-      includes:["Reserved party table for 45 min","Full access to every attraction","One juice box per child","A crown or party hat for the birthday star","One party helper"],
-      featured:false },
-    { key:"harvest", name:"Big Harvest Party", emoji:"🌾", color:"var(--gold)",
-      price:"289", kids:"Up to 12 kids", duration:"2 hours",
-      blurb:"Our most popular package — lots of fun, great food, zero stress for you.",
-      includes:["Private party room for 60 min","Full access to every attraction","Pizza + unlimited soft drinks","One ice cream per guest","A dedicated party host","A birthday gift for the star","Digital invitation template"],
+    { key:"standard", name:"Standard Party", emoji:"🎈", color:"var(--gold)",
+      price:"150", kids:"6–8 children", duration:"2 hours",
+      blurb:"A shared party — perfect for everyday birthdays, without the fuss.",
+      includes:["2-hour party duration","Entry for 6–8 children included","Reserved table in our shared party area","Full access to every play zone","Add food, tokens & extras as you like"],
       featured:true },
-    { key:"prairie", name:"Whole Prairie Party", emoji:"🚀", color:"var(--purple)",
-      price:"429", kids:"Up to 20 kids", duration:"2.5 hours",
-      blurb:"The big one — for large groups and unforgettable milestone birthdays.",
-      includes:["Extra-large private space for 90 min","Full park + private Rocket Bay session","Pizza + chicken tenders + unlimited drinks","Cake + ice cream","Two party hosts","A goodie bag for every guest","Exclusive 7 Fundays merch for the star","Setup and cleanup fully handled"],
+    { key:"vip", name:"VIP Facility Rental", emoji:"⭐", color:"var(--purple)",
+      price:"250", kids:"Up to 25–30 guests", duration:"2 hours",
+      blurb:"The whole place to yourselves — private and exclusive for big celebrations.",
+      includes:["2-hour private duration","Entire facility closed to the public","Up to 25–30 guests (kids + adults combined)","Full run of every play zone","Ideal for large parties & group events"],
       featured:false }
   ],
   addons: [
@@ -344,20 +351,24 @@ const SITE_DATA = {
     { q:"What if I need to change my booking?", a:"All bookings are final, but we're happy to help you reschedule or adjust details. Call our party planners at (306) 555-7373." },
     { q:"Are socks required?", a:"Yes — grip socks are required in all play areas, adults included. Forgot yours? Grab a pair at the front desk for $3." }
   ],
-  rules: [
-    "Grip socks required for everyone, including accompanying adults.",
-    "Children 12 and under must be supervised by an adult on-site.",
-    "No outside food or drink in the play areas (party rooms excepted).",
-    "No running, pushing, or food on the climbing structures.",
-    "For safety we cap capacity; a short wait is possible at peak times.",
-    "First visit? Complete a one-time digital waiver."
+  policy: [
+    { t:"Supervision is Required (No Drop-Offs)", d:"We are not a daycare facility. A parent or guardian (18+) must remain on the premises at all times and is strictly responsible for the supervision, safety, and behaviour of their children." },
+    { t:"Grip Socks are Mandatory", d:"For hygiene and safety, approved grip socks must be worn by ALL guests (children and adults) entering the play zones. Bare feet, shoes, and regular socks are not permitted in the play area." },
+    { t:"Signed Waiver Required", d:"Every participant must have a valid, signed waiver on file before entering the play area." },
+    { t:"Health & Wellness", d:"To keep our community safe, please stay home if you or your child are feeling unwell, have a fever, or are showing any symptoms of illness." },
+    { t:"Food & Drink Policy", d:"No outside food or drinks are allowed (with the exception of booked Birthday Parties / VIP Rentals). All food and beverages must be consumed in the designated seating area and are never allowed on the play equipment." },
+    { t:"Safe Play Rules", d:"Play safe and respect others! No running, pushing, roughhousing, or foul language. Slide down feet-first, one at a time. Do not climb up the slides or on the outside of the safety netting." },
+    { t:"Age-Specific Zones", d:"Please respect the designated Toddler Area (under 3 years). Older children must be mindful and gentle around smaller guests." },
+    { t:"Personal Belongings", d:"7 Fundays Park is not responsible for lost, stolen, or damaged personal items. Please use the shoe racks and keep all valuables with you." }
   ],
-  gallery: ["Happy play 01","Climber wide shot","Ball ocean joy","Birthday party","Slide moment","Toddler zone","Café corner","Group photo"]
+  policyDisclaimer: "7 Fundays Park reserves the right to refuse service or ask guests to leave the premises without a refund if these rules are continuously violated.",
+  gallery: ["Massive Play Zone","Dedicated Toddler Area","Private Party Room / Café"]
 };
 
 const NAV_LINKS = [
   ["Play", "attractions"], ["Pricing", "pricing"], ["Parties", "packages"],
-  ["Visit", "visit"], ["About", "about"], ["FAQ", "faq"]
+  ["Visit", "visit"], ["About", "about"], ["FAQ", "faq"],
+  ["Policy", "policy"], ["Waiver", "waiver"]
 ];
 </script>
 
@@ -436,7 +447,7 @@ function Nav(){
   return `<nav class="nav" id="nav">
     <div class="wrap nav-inner">
       <a class="nav-logo" href="#top" data-scroll="top">
-        <img src="assets/wordmark.png" alt="7 Fundays Park" />
+        <img src="assets/logo.png" alt="7 Fundays Park" />
       </a>
       <div class="nav-links">
         ${NAV_LINKS.map(([label,id]) => `<a href="#${id}" data-scroll="${id}">${label}</a>`).join("")}
@@ -466,7 +477,7 @@ function Hero(){
           decide the <span style="color:var(--accent);position:relative;display:inline-block">fun${Sparkle(26,"var(--gold)","position:absolute;top:-14px;right:-22px;animation:wiggle 3s ease-in-out infinite")}</span> 🎈
         </h1>
         <p class="lead" style="margin-top:20px;max-width:510px">
-          A three-storey grain-elevator climber, a wheatfield ball ocean and a rocket trampoline bay — a prairie-town indoor adventure built just for kids. Rain or snow, we're playing.
+          A towering grain-elevator climber, a wheatfield ball ocean and a rocket trampoline bay — a bright, single-floor prairie-town adventure built just for kids. Rain or snow, we're playing.
         </p>
         <div class="hero-actions" style="display:flex;gap:14px;margin-top:30px;flex-wrap:wrap">
           <button class="btn btn-primary btn-lg" data-book>🎉 Book a Birthday</button>
@@ -515,38 +526,57 @@ function Attractions(){
 }
 
 function Pricing(){
+  const sub = (t) => `<h3 class="reveal" style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:clamp(20px,2.4vw,26px);text-align:center;margin:46px 0 16px">${t}</h3>`;
+  const adm = D.admission;
   return `<section style="background:var(--bg-tint);position:relative">
     ${DotField("var(--accent)",0.06)}
     ${Scallop("var(--bg)","margin-bottom:-1px")}
     <div class="section" id="pricing" style="padding-top:20px;position:relative">
       <div class="wrap">
-        ${SectionHead({ center:true, eyebrow:"Pricing", title:"Simple, honest play prices", lead:"Accompanying adults are always free. Grip socks required — forgot yours? They're right at the front desk." })}
-        <div class="price-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch">
-          ${D.pricing.map((p,i) => `<div class="card reveal" data-delay="${i*90}" style="padding:32px 28px;position:relative;border:${p.featured?`3px solid ${p.color}`:'3px solid transparent'};transform:${p.featured?'scale(1.03)':'none'}">
-            ${p.featured ? `<span class="tag" style="position:absolute;top:-14px;left:28px;background:${p.color};color:#fff;display:inline-flex;align-items:center;gap:5px">${Star(14,"#fff")} Most popular</span>` : ""}
-            <h3 style="font-size:22px;color:${p.color}">${p.name}</h3>
-            <p style="font-size:14px;color:var(--ink-soft);margin-top:4px">${p.note}</p>
-            <div style="display:flex;align-items:baseline;gap:4px;margin-top:16px">
-              <span style="font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--ink-soft)">$</span>
-              <span style="font-family:var(--font-display);font-weight:800;font-size:52px;color:var(--brand);line-height:1">${p.price}</span>
-              <span style="font-size:15px;color:var(--ink-soft)">${p.unit}</span>
+        ${SectionHead({ center:true, eyebrow:"Pricing", title:"Simple, honest play prices", lead:"Accompanying adults are always free (1–2 per child). Grip socks are required for everyone — grab a pair at the front desk for $3." })}
+
+        ${sub("General Admission · Daily Play")}
+        <div class="card reveal" style="overflow:hidden;max-width:860px;margin-inline:auto">
+          <div class="adm-headrow" style="display:grid;grid-template-columns:1.8fr 1fr 1.3fr;background:var(--navy);color:#fff;padding:15px 26px;font-family:var(--font-display);font-weight:700;font-size:13.5px">
+            <div>Guest</div><div style="text-align:center">Weekday</div><div style="text-align:center">Weekend / Holiday</div>
+          </div>
+          ${adm.rows.map((r,i) => `<div class="adm-row" style="display:grid;grid-template-columns:1.8fr 1fr 1.3fr;align-items:center;padding:16px 26px;${i<adm.rows.length-1?'border-bottom:1px solid var(--line)':''}">
+            <div style="display:flex;align-items:center;gap:13px">
+              <span style="font-size:24px">${r.emoji}</span>
+              <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px">${r.who}</div><div class="adm-who-sub" style="font-size:13px;color:var(--ink-soft)">${r.sub}</div></div>
             </div>
-            <ul style="list-style:none;padding:0;margin:22px 0 0">
-              ${p.perks.map(perk => `<li style="display:flex;gap:10px;padding:7px 0;font-size:15.5px"><span style="color:${p.color};font-weight:900">✓</span>${perk}</li>`).join("")}
-            </ul>
+            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekday==='FREE'?'var(--green)':'var(--brand)'}">${r.weekday}</div>
+            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekend==='FREE'?'var(--green)':'var(--brand)'}">${r.weekend}</div>
           </div>`).join("")}
         </div>
-        <div class="pass-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px">
-          ${D.passes.map((p,i) => `<div class="card reveal" data-delay="${i*90}" style="padding:26px 28px;display:flex;align-items:center;gap:20px;background:${i===0?'var(--navy)':'var(--surface)'};color:${i===0?'#fff':'inherit'}">
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:10px">
-                <h3 style="font-size:21px;color:${i===0?'#fff':'var(--brand)'}">${p.name}</h3>
-                ${p.save ? `<span class="tag" style="background:var(--gold);color:var(--navy-deep)">${p.save}</span>` : ""}
-              </div>
-              <p style="font-size:14.5px;margin-top:6px;color:${i===0?'rgba(255,255,255,.8)':'var(--ink-soft)'}">${p.desc}</p>
+        <p class="reveal" style="text-align:center;font-size:14px;color:var(--ink-soft);margin-top:14px">${adm.note}</p>
+
+        ${sub("Memberships & Passes")}
+        <div class="pass-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:860px;margin-inline:auto">
+          ${D.passes.map((p,i) => `<div class="card reveal" data-delay="${i*90}" style="padding:26px 28px">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="font-size:26px">${p.emoji}</span>
+              <h3 style="font-size:20px;color:var(--brand)">${p.name}</h3>
             </div>
-            <div style="font-family:var(--font-display);font-weight:800;font-size:34px;white-space:nowrap">$${p.price}<span style="font-size:14px;opacity:.7">${p.unit||""}</span></div>
+            <p style="font-size:14.5px;margin-top:8px;color:var(--ink-soft)">${p.desc}</p>
+            <div style="display:flex;gap:12px;margin-top:18px">
+              ${p.tiers.map(t => `<div style="flex:1;background:var(--bg-tint);border-radius:16px;padding:14px 10px;text-align:center">
+                <div style="font-size:12.5px;color:var(--ink-soft);font-weight:700">${t.label}</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:27px;color:var(--brand);margin-top:3px">${t.price}</div>
+              </div>`).join("")}
+            </div>
           </div>`).join("")}
+        </div>
+
+        ${sub("Arcade & Concession")}
+        <div class="card reveal" style="padding:28px;max-width:860px;margin-inline:auto">
+          <div class="arc-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+            ${D.arcade.map(a => `<div style="text-align:center">
+              <div style="font-size:32px">${a.emoji}</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px;margin-top:8px">${a.label}</div>
+              <div style="font-size:14px;color:var(--ink-soft);margin-top:4px">${a.detail}</div>
+            </div>`).join("")}
+          </div>
         </div>
       </div>
     </div>
@@ -559,8 +589,8 @@ function Packages(){
     ${Cloud(120,"color-mix(in srgb,var(--accent) 10%, transparent)","float-2","position:absolute;top:30px;left:-2%")}
     ${Cloud(90,"color-mix(in srgb,var(--gold) 16%, transparent)","float","position:absolute;top:80px;right:2%")}
     <div class="wrap" style="position:relative">
-      ${SectionHead({ eyebrow:"Birthdays & Parties", title:"Leave the party to us", lead:"From setup to cleanup, a dedicated host runs the show. You just hold the camera and catch the smiles." })}
-      <div class="pkg-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+      ${SectionHead({ eyebrow:"Birthdays & Parties", title:"Leave the party to us", lead:"Two-hour celebrations, shared or all to yourselves. You bring the cake — we'll handle the fun. Prices are a base; add food, tokens and extras to suit." })}
+      <div class="pkg-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:760px;margin-inline:auto">
         ${D.packages.map((p,i) => `<div class="card reveal" data-delay="${i*90}" style="overflow:hidden;display:flex;flex-direction:column;border:${p.featured?`3px solid ${p.color}`:'3px solid transparent'}">
           <div style="background:color-mix(in srgb,${p.color} 14%, var(--surface));padding:26px 26px 22px;position:relative">
             ${p.featured ? `<span class="tag" style="position:absolute;top:18px;right:18px;background:${p.color};color:#fff;display:inline-flex;align-items:center;gap:5px">${Star(14,"#fff")} Most popular</span>` : ""}
@@ -585,11 +615,11 @@ function Packages(){
           </div>
         </div>`).join("")}
       </div>
-      <div class="card reveal" style="margin-top:26px;padding:26px 30px;display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;flex-wrap:wrap">
+      <div class="card reveal" style="margin-top:26px;padding:26px 30px;display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;flex-wrap:wrap;max-width:760px;margin-inline:auto">
         <span style="font-size:34px">🎈</span>
         <div style="flex:1;min-width:220px">
-          <h3 style="color:#fff;font-size:21px">More than 20 kids, or a custom theme?</h3>
-          <p style="color:rgba(255,255,255,.82);font-size:15px;margin-top:4px">Big groups, corporate family days, full buyouts — our party planners will tailor it for you.</p>
+          <h3 style="color:#fff;font-size:21px">Bigger group or a custom celebration?</h3>
+          <p style="color:rgba(255,255,255,.82);font-size:15px;margin-top:4px">Group events, fundraisers, corporate family days — tell us what you're planning and we'll tailor it for you.</p>
         </div>
         <a class="btn btn-sun" href="tel:${D.brand.phone}">📞 Call a planner</a>
       </div>
@@ -603,7 +633,7 @@ function Visit(){
     <div class="section" id="visit" style="padding-top:24px">
       <div class="wrap visit-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center">
         <div>
-          ${SectionHead({ eyebrow:"Hours & Location", title:"Right by the Langham rail line", lead:"About 25 minutes from Saskatoon. Free parking, stroller-friendly, and fully accessible throughout." })}
+          ${SectionHead({ eyebrow:"Hours & Location", title:"Find us in Langham", lead:"On Service Road West, about 25 minutes from Saskatoon. Free parking, stroller-friendly, and fully accessible throughout." })}
           <div class="card" style="padding:10px 26px;margin-bottom:22px">
             ${D.hours.map((h,i) => `<div style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:${i<D.hours.length-1?'1px solid var(--line)':'none'};font-size:15.5px">
               <strong style="font-family:var(--font-display);color:var(--brand)">${h.day}</strong>
@@ -692,21 +722,23 @@ function FAQ(){
             </div>`).join("")}
           </div>
         </div>
-        <div id="rules">
-          ${SectionHead({ eyebrow:"Rules & Waiver", title:"Play safe, play hard" })}
+        <div>
+          ${SectionHead({ eyebrow:"Good to know", title:"Before you visit" })}
           <div class="card" style="padding:26px 28px">
             <ul style="list-style:none;padding:0;margin:0">
-              ${D.rules.map((r,i) => `<li style="display:flex;gap:12px;padding:11px 0;border-bottom:${i<D.rules.length-1?'1px solid var(--line)':'none'};font-size:15.5px">
-                <span style="flex-shrink:0;width:24px;height:24px;border-radius:8px;background:var(--gold);color:var(--navy-deep);font-family:var(--font-display);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center">${i+1}</span>${r}
+              ${[
+                ["🧑‍🤝‍🧑","Supervision required","A parent or guardian (18+) stays on-site at all times — we're not a drop-off facility."],
+                ["🧦","Grip socks mandatory","Required for everyone, kids and adults. Forgot yours? $3 at the front desk."],
+                ["✍️","Signed waiver needed","One per child before play — sign on arrival, or ahead of time to skip the line."],
+                ["🤧","Feeling unwell? Stay home","Please pick another day if you or your child have any symptoms."]
+              ].map((r,i,arr) => `<li style="display:flex;gap:13px;padding:13px 0;border-bottom:${i<arr.length-1?'1px solid var(--line)':'none'};align-items:flex-start">
+                <span style="font-size:22px;flex-shrink:0">${r[0]}</span>
+                <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:15.5px">${r[1]}</div><div style="font-size:14px;color:var(--ink-soft);margin-top:2px">${r[2]}</div></div>
               </li>`).join("")}
             </ul>
-            <div style="margin-top:22px;padding:18px 20px;border-radius:16px;background:color-mix(in srgb,var(--accent) 10%, transparent);display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-              <span style="font-size:26px">✍️</span>
-              <div style="flex:1;min-width:180px">
-                <strong style="font-family:var(--font-display);color:var(--brand)">Sign the waiver online</strong>
-                <p style="font-size:14px;color:var(--ink-soft)">Skip the line on arrival — takes a couple minutes.</p>
-              </div>
-              <button class="btn btn-primary" style="padding:11px 22px;font-size:15px">Sign waiver</button>
+            <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+              <a class="btn btn-ghost" style="padding:11px 20px;font-size:15px" href="#policy" data-scroll="policy">Read full policy</a>
+              <a class="btn btn-primary" style="padding:11px 20px;font-size:15px" href="#waiver" data-scroll="waiver">View &amp; sign waiver</a>
             </div>
           </div>
         </div>
@@ -722,7 +754,7 @@ function Footer(){
     <div class="wrap">
       <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:40px">
         <div>
-          <img src="assets/wordmark.png" alt="7 Fundays Park" style="height:54px;background:#fff;padding:8px 12px;border-radius:14px" />
+          <img src="assets/logo.png" alt="7 Fundays Park" style="height:66px;background:#fff;padding:10px 16px;border-radius:16px" />
           <p style="margin-top:18px;color:#aebfd8;font-size:16px;max-width:300px">Langham's indoor prairie playground. Rain, snow or shine — the fun never stops. 🌾</p>
           <div style="display:flex;gap:10px;margin-top:20px">
             ${social.map(s => `<a href="#" aria-label="${s}" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display)">${s[0]}</a>`).join("")}
@@ -751,6 +783,49 @@ function Footer(){
     </div>
   </footer>`;
 }
+
+function Policy(){
+  return `<section style="background:var(--bg-tint);position:relative">
+    ${DotField("var(--accent)",0.05)}
+    ${Scallop("var(--bg)","margin-bottom:-1px")}
+    <div class="section" id="policy" style="padding-top:24px;position:relative">
+      <div class="wrap">
+        ${SectionHead({ center:true, eyebrow:"Facility Rules", title:"Rules & policies", lead:"A few house rules keep every kid safe and every visit fun. Please give them a read before you play." })}
+        <div class="policy-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          ${D.policy.map((p,i) => `<div class="card reveal" data-delay="${(i%2)*70}" style="padding:22px 24px;display:flex;gap:16px;align-items:flex-start">
+            <span style="flex-shrink:0;width:38px;height:38px;border-radius:12px;background:var(--gold);color:var(--navy-deep);font-family:var(--font-display);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center">${i+1}</span>
+            <div>
+              <h3 style="font-size:17.5px;color:var(--brand)">${p.t}</h3>
+              <p style="margin-top:6px;font-size:14.5px;color:var(--ink-soft);line-height:1.65">${p.d}</p>
+            </div>
+          </div>`).join("")}
+        </div>
+        <div class="reveal" style="margin-top:20px;padding:18px 24px;border-radius:16px;background:color-mix(in srgb,var(--red) 9%,transparent);border:2px solid color-mix(in srgb,var(--red) 28%,transparent);font-size:14.5px;color:var(--ink);line-height:1.6">
+          <strong style="font-family:var(--font-display);color:var(--red)">Management disclaimer · </strong>${D.policyDisclaimer}
+        </div>
+      </div>
+    </div>
+    ${Hill("var(--bg)")}
+  </section>`;
+}
+
+function Waiver(){
+  return `<section class="section" id="waiver" style="position:relative;overflow:hidden">
+    ${Cloud(110,"color-mix(in srgb,var(--accent) 10%, transparent)","float","position:absolute;top:30px;left:-1%")}
+    ${Star(26,"var(--gold)","position:absolute;top:70px;right:7%;opacity:.5;animation:wiggle 5s ease-in-out infinite")}
+    <div class="wrap" style="position:relative">
+      ${SectionHead({ center:true, eyebrow:"Waiver", title:"Sign your waiver", lead:"Every guest needs a signed waiver on file before play. Read it below, then sign on arrival — or download, fill it out and bring it to skip the line." })}
+      <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+        <a class="btn btn-primary" href="assets/waiver.pdf" target="_blank" rel="noopener">📄 Open / print waiver</a>
+        <a class="btn btn-ghost" href="assets/waiver.pdf" download>⬇️ Download (PDF)</a>
+      </div>
+      <div class="card reveal" style="overflow:hidden;padding:0">
+        <iframe src="assets/waiver.pdf#view=FitH" title="7 Fundays Park waiver form" loading="lazy" style="width:100%;height:78vh;min-height:520px;border:0;display:block;background:#fff"></iframe>
+      </div>
+      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:16px">Waiver issued by ${D.brand.legal}, operating as 7 Fundays Park. If the form doesn't display on your device, use the buttons above to open it.</p>
+    </div>
+  </section>`;
+}
 </script>
 
 <script>
@@ -761,11 +836,11 @@ const STEPS = ["Package", "Date & Time", "Details", "Add-ons", "Contact", "Revie
 
 const Booking = {
   open:false, step:0, done:false, showErr:false,
-  form:{ pkg:"harvest", date:"", time:"", guests:10, childName:"", childAge:"", theme:D.themes[0], addons:{}, parentName:"", email:"", phone:"", notes:"" },
+  form:{ pkg:"standard", date:"", time:"", guests:8, childName:"", childAge:"", theme:D.themes[0], addons:{}, parentName:"", email:"", phone:"", notes:"" },
 
   start(pkgKey){
     this.open = true; this.step = 0; this.done = false; this.showErr = false;
-    this.form = { pkg: pkgKey || "harvest", date:"", time:"", guests:10, childName:"", childAge:"", theme:D.themes[0], addons:{}, parentName:"", email:"", phone:"", notes:"" };
+    this.form = { pkg: pkgKey || "standard", date:"", time:"", guests:8, childName:"", childAge:"", theme:D.themes[0], addons:{}, parentName:"", email:"", phone:"", notes:"" };
     document.body.style.overflow = "hidden";
     this.render();
   },
@@ -775,7 +850,7 @@ const Booking = {
     const el = document.getElementById("booking-mount");
     if (el) el.innerHTML = "";
   },
-  pkg(){ return D.packages.find(p => p.key === this.form.pkg) || D.packages[1]; },
+  pkg(){ return D.packages.find(p => p.key === this.form.pkg) || D.packages[0]; },
   base(){ return parseInt(this.pkg().price, 10); },
   addonTotal(){ return D.addons.reduce((s,a) => s + (this.form.addons[a.key]||0)*a.price, 0); },
   total(){ return this.base() + this.addonTotal(); },
@@ -858,8 +933,8 @@ const Booking = {
       </div>
       <div style="margin-top:16px">
         ${this.field(`Number of kids (incl. the star): ${f.guests}`,
-          `<input type="range" min="4" max="24" value="${f.guests}" data-set-range="guests" style="width:100%;accent-color:var(--accent)" />
-           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:2px"><span>4</span><span>24</span></div>`,
+          `<input type="range" min="4" max="30" value="${f.guests}" data-set-range="guests" style="width:100%;accent-color:var(--accent)" />
+           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:2px"><span>4</span><span>30</span></div>`,
           "You can adjust before the party", this.E("guests"))}
       </div>
       <div style="margin-top:16px">
@@ -1021,7 +1096,7 @@ const Booking = {
     const root = document.getElementById("root");
     root.innerHTML =
       Nav() +
-      "<main>" + Hero() + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + "</main>" +
+      "<main>" + Hero() + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + Policy() + Waiver() + "</main>" +
       Footer() +
       `<button class="btn btn-primary fab" data-book>🎉 Book a Party</button>` +
       `<div id="booking-mount"></div>`;

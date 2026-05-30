@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>7 Fundays Park · Admin</title>
+<link rel="icon" type="image/png" href="assets/badge.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{ --navy:#1b3a73; --navy-deep:#142c58; --sky:#2ba7e2; --gold:#e2a93c; --green:#2f9e57; --red:#e4453c;
+    --ink:#22304a; --soft:#5b6781; --line:#e6ebf3; --bg:#f4f7fb; --surface:#fff; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:'Nunito',system-ui,sans-serif; background:var(--bg); color:var(--ink); }
+  h1,h2,h3{ font-family:'Baloo 2',system-ui,sans-serif; margin:0; }
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  input{ font-family:inherit; }
+
+  /* login */
+  .login-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-card{ width:min(400px,100%); background:var(--surface); border-radius:22px; box-shadow:0 24px 60px -26px rgba(20,44,88,.5); overflow:hidden; }
+  .login-head{ background:var(--navy); color:#fff; padding:26px 28px; text-align:center; }
+  .login-head img{ height:54px; background:#fff; border-radius:14px; padding:8px 12px; margin-bottom:12px; }
+  .login-head h1{ font-size:22px; font-weight:800; }
+  .login-head p{ margin:4px 0 0; font-size:13.5px; color:rgba(255,255,255,.75); }
+  .login-body{ padding:26px 28px 30px; }
+  label.fld{ display:block; margin-bottom:16px; }
+  label.fld span{ display:block; font-family:'Baloo 2'; font-weight:700; font-size:14px; color:var(--navy); margin-bottom:6px; }
+  .inp{ width:100%; padding:13px 15px; border-radius:13px; border:2px solid var(--line); font-size:16px; outline:none; transition:.15s; }
+  .inp:focus{ border-color:var(--sky); }
+  .btn{ width:100%; padding:14px; border-radius:13px; background:var(--sky); color:#fff; font-family:'Baloo 2'; font-weight:700; font-size:17px; transition:.15s; }
+  .btn:hover{ filter:brightness(1.05); }
+  .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+  .err{ color:var(--red); font-size:13.5px; font-weight:700; margin:-6px 0 14px; min-height:18px; }
+
+  /* dashboard */
+  .top{ background:var(--navy); color:#fff; padding:14px 22px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:5; }
+  .top img{ height:38px; background:#fff; border-radius:10px; padding:5px 8px; }
+  .top h1{ font-size:19px; font-weight:800; flex:1; }
+  .top .tbtn{ background:rgba(255,255,255,.14); color:#fff; padding:9px 16px; border-radius:999px; font-family:'Baloo 2'; font-weight:700; font-size:14px; }
+  .top .tbtn:hover{ background:rgba(255,255,255,.24); }
+  .wrap{ max-width:1200px; margin:0 auto; padding:22px; }
+  .tabs{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .tab{ background:var(--surface); color:var(--soft); padding:11px 20px; border-radius:999px; font-family:'Baloo 2'; font-weight:700; font-size:15px; box-shadow:0 6px 16px -12px rgba(20,44,88,.4); }
+  .tab.on{ background:var(--navy); color:#fff; }
+  .toolbar{ display:flex; gap:12px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .search{ flex:1; min-width:200px; max-width:420px; padding:12px 16px; border-radius:13px; border:2px solid var(--line); font-size:15px; outline:none; background:var(--surface); }
+  .search:focus{ border-color:var(--sky); }
+  .count{ color:var(--soft); font-size:13.5px; font-weight:700; }
+  .tablewrap{ background:var(--surface); border-radius:16px; box-shadow:0 12px 30px -20px rgba(20,44,88,.4); overflow:auto; }
+  table{ border-collapse:collapse; width:100%; font-size:13.5px; white-space:nowrap; }
+  th{ background:#f0f4fa; color:var(--navy); font-family:'Baloo 2'; font-weight:700; text-align:left; padding:12px 14px; position:sticky; top:0; border-bottom:2px solid var(--line); }
+  td{ padding:11px 14px; border-bottom:1px solid var(--line); color:var(--ink); }
+  tr:hover td{ background:#fafcff; }
+  .empty{ text-align:center; color:var(--soft); padding:50px 20px; font-size:16px; }
+  .hidden{ display:none; }
+  .note{ color:var(--soft); font-size:12.5px; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-head">
+      <img src="assets/badge.png" alt="" />
+      <h1>7 Fundays Park</h1>
+      <p>Admin · bookings &amp; waivers</p>
+    </div>
+    <div class="login-body">
+      <form id="loginForm" autocomplete="off">
+        <label class="fld"><span>Username</span><input class="inp" id="user" value="admin" autocomplete="username" /></label>
+        <label class="fld"><span>Password</span><input class="inp" id="pass" type="password" placeholder="Enter admin password" autocomplete="current-password" /></label>
+        <div class="err" id="loginErr"></div>
+        <button class="btn" id="loginBtn" type="submit">Sign in</button>
+      </form>
+      <p class="note">Authorized staff only. Sessions stay signed in until you close the tab.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="hidden">
+  <div class="top">
+    <img src="assets/badge.png" alt="" />
+    <h1>7 Fundays Park · Admin</h1>
+    <button class="tbtn" id="refreshBtn">↻ Refresh</button>
+    <button class="tbtn" id="logoutBtn">Log out</button>
+  </div>
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab on" data-tab="bookings" id="tabBookings">🎉 Bookings</button>
+      <button class="tab" data-tab="waivers" id="tabWaivers">✍️ Waivers</button>
+    </div>
+    <div class="toolbar">
+      <input class="search" id="search" placeholder="Search (name, email, date…)" />
+      <span class="count" id="count"></span>
+    </div>
+    <div id="tableArea"></div>
+  </div>
+</div>
+
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbwQv3RVsRh4nNmPAdHHXzR9FDkYw5McbwwZayw6RwXRe_INsFEg19viUxUTFVSRxy8d/exec";
+let DATA = { bookings:{headers:[],rows:[]}, waivers:{headers:[],rows:[]} };
+let activeTab = "bookings";
+let _n = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function fetchAdmin(key, onOk, onErr){
+  const cb = "adm" + (++_n) + "_" + Math.floor(Math.random()*1e6);
+  let done = false, s;
+  const cleanup = () => { try{ delete window[cb]; }catch(e){} if(s&&s.parentNode) s.parentNode.removeChild(s); };
+  window[cb] = res => { if(done) return; done = true; cleanup(); onOk(res); };
+  s = document.createElement("script");
+  s.src = ENDPOINT + "?action=admin&key=" + encodeURIComponent(key) + "&callback=" + cb;
+  s.onerror = () => { if(done) return; done = true; cleanup(); onErr&&onErr(); };
+  document.body.appendChild(s);
+  setTimeout(() => { if(done) return; done = true; cleanup(); onErr&&onErr(); }, 12000);
+}
+
+function renderTable(){
+  const d = DATA[activeTab] || {headers:[],rows:[]};
+  const q = ($("search").value || "").toLowerCase();
+  const area = $("tableArea");
+  if(!d.headers.length){ area.innerHTML = '<p class="empty">No '+activeTab+' yet. New '+activeTab+' will appear here automatically.</p>'; $("count").textContent=""; return; }
+  const rows = d.rows.filter(r => !q || r.some(c => String(c).toLowerCase().indexOf(q) >= 0));
+  let h = '<div class="tablewrap"><table><thead><tr>' + d.headers.map(x=>'<th>'+esc(x)+'</th>').join('') + '</tr></thead><tbody>';
+  h += rows.map(r => '<tr>' + r.map(c=>'<td>'+esc(c)+'</td>').join('') + '</tr>').join('');
+  h += '</tbody></table></div>';
+  area.innerHTML = h;
+  $("count").textContent = rows.length + " of " + d.rows.length + " " + activeTab;
+}
+
+function setTab(t){
+  activeTab = t;
+  $("tabBookings").classList.toggle("on", t==="bookings");
+  $("tabWaivers").classList.toggle("on", t==="waivers");
+  renderTable();
+}
+
+function tabLabels(){
+  $("tabBookings").textContent = "🎉 Bookings (" + (DATA.bookings.rows.length) + ")";
+  $("tabWaivers").textContent = "✍️ Waivers (" + (DATA.waivers.rows.length) + ")";
+}
+
+function showDash(res){
+  DATA.bookings = res.bookings || {headers:[],rows:[]};
+  DATA.waivers = res.waivers || {headers:[],rows:[]};
+  $("login").classList.add("hidden");
+  $("dash").classList.remove("hidden");
+  tabLabels(); renderTable();
+}
+
+function load(key, onErr){
+  fetchAdmin(key, res => {
+    if(res && res.ok){ sessionStorage.setItem("fd_admin_key", key); showDash(res); }
+    else { sessionStorage.removeItem("fd_admin_key"); onErr && onErr("Incorrect password."); }
+  }, () => onErr && onErr("Couldn't reach the server. Try again."));
+}
+
+$("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const user = ($("user").value||"").trim().toLowerCase();
+  const pass = $("pass").value;
+  $("loginErr").textContent = "";
+  if(user !== "admin"){ $("loginErr").textContent = "Unknown username."; return; }
+  if(!pass){ $("loginErr").textContent = "Enter the password."; return; }
+  $("loginBtn").disabled = true; $("loginBtn").textContent = "Signing in…";
+  load(pass, msg => { $("loginErr").textContent = msg; $("loginBtn").disabled = false; $("loginBtn").textContent = "Sign in"; });
+});
+
+$("search").addEventListener("input", renderTable);
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.getAttribute("data-tab"))));
+$("refreshBtn").addEventListener("click", () => { const k = sessionStorage.getItem("fd_admin_key"); if(k){ $("refreshBtn").textContent="↻ …"; load(k, ()=>{}); setTimeout(()=>$("refreshBtn").textContent="↻ Refresh",1200); } });
+$("logoutBtn").addEventListener("click", () => { sessionStorage.removeItem("fd_admin_key"); $("dash").classList.add("hidden"); $("login").classList.remove("hidden"); $("pass").value=""; });
+
+// auto-login if session key present
+(() => { const k = sessionStorage.getItem("fd_admin_key"); if(k) load(k, ()=>{}); })();
+</script>
+</body>
+</html>

@@ -883,8 +883,17 @@ const Booking = {
     if (Object.keys(e).length){ this.showErr = true; this.render(); return; }
     this.showErr = false;
     if (this.step < STEPS.length-1) this.step++;
-    else { this.done = true; this.fireConfetti(); }
+    else { this.done = true; this._bookingNo = this._bookingNo || ("#FD" + Math.floor(1000 + Math.random()*9000)); this.postBooking(); this.fireConfetti(); }
     this.render();
+  },
+  postBooking(){
+    try{
+      if(!(typeof WAIVER_ENDPOINT!=="undefined" && WAIVER_ENDPOINT.indexOf("http")===0)) return;
+      const f=this.form, pkg=this.pkg();
+      const addons = D.addons.filter(a=>f.addons[a.key]).map(a=>`${a.label} ×${f.addons[a.key]}`).join("; ");
+      const payload = { type:"booking", bookingNo:this._bookingNo, package:pkg.name, date:f.date, time:f.time, guests:f.guests, childName:f.childName, childAge:f.childAge, theme:f.theme, addons:addons, total:this.total(), deposit:80, parent:f.parentName, email:f.email, phone:f.phone, notes:f.notes };
+      fetch(WAIVER_ENDPOINT,{ method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) });
+    }catch(e){}
   },
   back(){ this.showErr = false; if (this.step>0) this.step--; this.render(); },
   set(k,v){ this.form[k]=v; },

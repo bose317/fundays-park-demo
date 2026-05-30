@@ -1234,6 +1234,43 @@ const WaiverModal = {
     </div>`;
   }
 };
+
+const PolicyModal = {
+  open:false,
+  start(){ this.open=true; document.body.style.overflow="hidden"; this.render(); },
+  close(){ this.open=false; document.body.style.overflow=""; const m=document.getElementById("policy-mount"); if(m) m.innerHTML=""; },
+  render(){
+    const m=document.getElementById("policy-mount");
+    if(!m) return;
+    if(!this.open){ m.innerHTML=""; return; }
+    m.innerHTML=`<div class="bk-overlay" data-policy-overlay>
+      <div class="card bk-card" style="width:min(680px,100%)">
+        <div class="bk-head">
+          <img src="assets/badge.png" alt="" />
+          <div style="flex:1">
+            <div style="font-family:var(--font-display);font-weight:800;font-size:20px">Rules & policies</div>
+            <div style="font-size:13.5px;color:rgba(255,255,255,.75)">A few house rules — please read before you play</div>
+          </div>
+          <button class="bk-close" aria-label="Close" data-policy-close>×</button>
+        </div>
+        <div class="bk-body">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            ${D.policy.map((p,i)=>`<div style="display:flex;gap:14px;align-items:flex-start">
+              <span style="flex-shrink:0;width:32px;height:32px;border-radius:10px;background:var(--gold);color:var(--navy-deep);font-family:var(--font-display);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center">${i+1}</span>
+              <div><h3 style="font-size:16px;color:var(--brand)">${p.t}</h3><p style="margin-top:4px;font-size:14px;color:var(--ink-soft);line-height:1.6">${p.d}</p></div>
+            </div>`).join("")}
+          </div>
+          <div style="margin-top:16px;padding:14px 18px;border-radius:14px;background:color-mix(in srgb,var(--red) 9%,transparent);border:2px solid color-mix(in srgb,var(--red) 28%,transparent);font-size:13.5px;color:var(--ink);line-height:1.55">
+            <strong style="font-family:var(--font-display);color:var(--red)">Management disclaimer · </strong>${D.policyDisclaimer}
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:20px">
+            <button class="btn btn-primary" data-policy-close>Got it 👍</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+};
 </script>
 
 <script>
@@ -1244,18 +1281,19 @@ const WaiverModal = {
   function scrollToId(id){
     if (id === "top"){ window.scrollTo({ top:0, behavior:"smooth" }); return; }
     const el = document.getElementById(id);
-    if (el) window.scrollTo({ top: el.offsetTop - 70, behavior:"smooth" });
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 70, behavior:"smooth" });
   }
 
   function render(){
     const root = document.getElementById("root");
     root.innerHTML =
       Nav() +
-      "<main>" + Hero() + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + Policy() + Waiver() + "</main>" +
+      "<main>" + Hero() + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + Waiver() + "</main>" +
       Footer() +
       `<button class="btn btn-primary fab" data-book>🎉 Book a Party</button>` +
       `<div id="booking-mount"></div>` +
-      `<div id="waiver-mount"></div>`;
+      `<div id="waiver-mount"></div>` +
+      `<div id="policy-mount"></div>`;
   }
 
   function wire(){
@@ -1271,10 +1309,10 @@ const WaiverModal = {
 
     // delegated clicks
     document.body.addEventListener("click", (e) => {
-      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay]");
+      const t = e.target.closest("[data-scroll],[data-book],[data-book-close],[data-faq],[data-set-pkg],[data-set-time],[data-set-theme],[data-qty],[data-bk-next],[data-bk-back],[data-bk-overlay],[data-waiver],[data-waiver-close],[data-waiver-submit],[data-waiver-overlay],[data-policy-close],[data-policy-overlay]");
       if (!t) return;
 
-      if (t.hasAttribute("data-scroll")){ e.preventDefault(); if (menu) menu.classList.remove("open"); scrollToId(t.getAttribute("data-scroll")); return; }
+      if (t.hasAttribute("data-scroll")){ e.preventDefault(); if (menu) menu.classList.remove("open"); const tgt=t.getAttribute("data-scroll"); if (tgt==="policy"){ PolicyModal.start(); return; } scrollToId(tgt); return; }
       if (t.hasAttribute("data-book")){ const k = t.getAttribute("data-book"); if (menu) menu.classList.remove("open"); Booking.start(k || null); return; }
       if (t.hasAttribute("data-book-close")){ Booking.close(); return; }
       if (t.hasAttribute("data-bk-overlay") && e.target === t){ Booking.close(); return; }
@@ -1282,6 +1320,8 @@ const WaiverModal = {
       if (t.hasAttribute("data-waiver-close")){ WaiverModal.close(); return; }
       if (t.hasAttribute("data-waiver-submit")){ WaiverModal.submit(); return; }
       if (t.hasAttribute("data-waiver-overlay") && e.target === t){ WaiverModal.close(); return; }
+      if (t.hasAttribute("data-policy-close")){ PolicyModal.close(); return; }
+      if (t.hasAttribute("data-policy-overlay") && e.target === t){ PolicyModal.close(); return; }
       if (t.hasAttribute("data-bk-next")){ Booking.next(); return; }
       if (t.hasAttribute("data-bk-back")){ Booking.back(); return; }
       if (t.hasAttribute("data-set-pkg")){ Booking.set("pkg", t.getAttribute("data-set-pkg")); Booking.render(); return; }
@@ -1337,7 +1377,7 @@ const WaiverModal = {
     });
 
     // close booking on Escape
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape"){ if (Booking.open) Booking.close(); if (WaiverModal.open) WaiverModal.close(); } });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape"){ if (Booking.open) Booking.close(); if (WaiverModal.open) WaiverModal.close(); if (PolicyModal.open) PolicyModal.close(); } });
   }
 
   render();

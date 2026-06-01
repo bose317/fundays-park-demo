@@ -55,6 +55,14 @@
   td{ padding:11px 14px; border-bottom:1px solid var(--line); color:var(--ink); }
   tr:hover td{ background:#fafcff; }
   .empty{ text-align:center; color:var(--soft); padding:50px 20px; font-size:16px; }
+  .pill{ display:inline-block; padding:3px 11px; border-radius:999px; font-weight:800; font-size:12px; white-space:nowrap; }
+  .pill.ok{ background:rgba(47,158,87,.15); color:var(--green); }
+  .pill.bad{ background:rgba(228,69,60,.12); color:var(--red); }
+  .pill.na{ background:#eef1f6; color:var(--soft); }
+  .verdict{ border-radius:13px; padding:13px 16px; font-size:15px; font-weight:700; margin-bottom:14px; line-height:1.4; }
+  .verdict.ok{ background:rgba(47,158,87,.12); color:#1c7a41; border:2px solid rgba(47,158,87,.4); }
+  .verdict.bad{ background:rgba(228,69,60,.1); color:#b5342c; border:2px solid rgba(228,69,60,.42); }
+  .verdict.miss{ background:#eef1f6; color:var(--soft); border:2px solid var(--line); }
   .hidden{ display:none; }
   .note{ color:var(--soft); font-size:12.5px; margin-top:14px; }
 </style>
@@ -95,9 +103,10 @@
       <button class="tab" data-tab="waivers" id="tabWaivers">✍️ Waivers</button>
     </div>
     <div class="toolbar">
-      <input class="search" id="search" placeholder="Search (name, email, date…)" />
+      <input class="search" id="search" placeholder="Check-in: type a child or parent name…" />
       <span class="count" id="count"></span>
     </div>
+    <div id="verdict"></div>
     <div id="tableArea"></div>
   </div>
 </div>
@@ -123,14 +132,53 @@ function fetchAdmin(key, onOk, onErr){
   setTimeout(() => { if(done) return; done = true; cleanup(); onErr&&onErr(); }, 12000);
 }
 
+function todayMid(){ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),t.getDate()); }
+function parseYMD(s){ const m=/(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"").trim()); return m ? new Date(+m[1],+m[2]-1,+m[3]) : null; }
+function expiryStatus(expStr){
+  const d=parseYMD(expStr); if(!d) return {state:"none"};
+  const days=Math.round((d - todayMid())/86400000);
+  return { state: days>=0?"active":"expired", days:days, expiry:String(expStr).trim() };
+}
+function statusPill(st){
+  if(st.state==="active") return '<span class="pill ok">✓ Active'+(st.days<=30?' · '+st.days+'d':'')+'</span>';
+  if(st.state==="expired") return '<span class="pill bad">✗ Expired</span>';
+  return '<span class="pill na">—</span>';
+}
+
 function renderTable(){
   const d = DATA[activeTab] || {headers:[],rows:[]};
   const q = ($("search").value || "").toLowerCase();
   const area = $("tableArea");
-  if(!d.headers.length){ area.innerHTML = '<p class="empty">No '+activeTab+' yet. New '+activeTab+' will appear here automatically.</p>'; $("count").textContent=""; return; }
+  const isW = activeTab==="waivers";
+  const expIdx = isW ? d.headers.findIndex(h=>/expir/i.test(h)) : -1;
+  if(!d.headers.length){ area.innerHTML = '<p class="empty">No '+activeTab+' yet. New '+activeTab+' will appear here automatically.</p>'; $("count").textContent=""; $("verdict").innerHTML=""; return; }
   const rows = d.rows.filter(r => !q || r.some(c => String(c).toLowerCase().indexOf(q) >= 0));
-  let h = '<div class="tablewrap"><table><thead><tr>' + d.headers.map(x=>'<th>'+esc(x)+'</th>').join('') + '</tr></thead><tbody>';
-  h += rows.map(r => '<tr>' + r.map(c=>'<td>'+esc(c)+'</td>').join('') + '</tr>').join('');
+
+  // front-desk verdict banner (waivers tab + active search)
+  let verdict="";
+  if(isW && q && expIdx>=0){
+    if(!rows.length){ verdict='<div class="verdict miss">🔎 No waiver on file matching “'+esc(q)+'”. Please ask them to sign one.</div>'; }
+    else {
+      const sts = rows.map(r=>expiryStatus(r[expIdx]));
+      const active = sts.filter(s=>s.state==="active");
+      if(active.length){
+        const latest = active.reduce((a,b)=>a.days>b.days?a:b);
+        verdict='<div class="verdict ok">✓ Active waiver on file — valid until <strong>'+esc(latest.expiry)+'</strong> ('+latest.days+' days left). '+rows.length+' record'+(rows.length===1?'':'s')+' match “'+esc(q)+'”.</div>';
+      } else {
+        const recent = sts.filter(s=>s.state==="expired").reduce((a,b)=>a.days>b.days?a:b);
+        verdict='<div class="verdict bad">✗ No active waiver — most recent expired <strong>'+esc(recent.expiry)+'</strong>. Please ask them to sign again.</div>';
+      }
+    }
+  }
+  $("verdict").innerHTML = verdict;
+
+  const headers = isW ? ['Status'].concat(d.headers) : d.headers;
+  let h = '<div class="tablewrap"><table><thead><tr>' + headers.map(x=>'<th>'+esc(x)+'</th>').join('') + '</tr></thead><tbody>';
+  h += rows.map(r => {
+    let cells = r.map(c=>'<td>'+esc(c)+'</td>').join('');
+    if(isW){ const st = expIdx>=0?expiryStatus(r[expIdx]):{state:"none"}; cells = '<td>'+statusPill(st)+'</td>'+cells; }
+    return '<tr>'+cells+'</tr>';
+  }).join('');
   h += '</tbody></table></div>';
   area.innerHTML = h;
   $("count").textContent = rows.length + " of " + d.rows.length + " " + activeTab;

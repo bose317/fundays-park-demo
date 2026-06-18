@@ -489,9 +489,9 @@ function Hero(){
           <a class="btn btn-ghost btn-lg" href="#pricing" data-scroll="pricing">See Pricing</a>
         </div>
         <div class="hero-stats" style="display:flex;gap:28px;margin-top:38px;flex-wrap:wrap">
-          ${D.stats.map(s => `<div>
-            <div style="font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--brand);line-height:1">${s.num}<span style="font-size:15px;color:var(--accent);margin-left:3px">${s.unit}</span></div>
-            <div style="font-size:13.5px;color:var(--ink-soft);margin-top:5px;font-weight:600">${s.label}</div>
+          ${D.stats.map((s,i) => `<div>
+            <div style="font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--brand);line-height:1"><span data-edit="stat.num.${i}">${s.num}</span><span style="font-size:15px;color:var(--accent);margin-left:3px" data-edit="stat.unit.${i}">${s.unit}</span></div>
+            <div style="font-size:13.5px;color:var(--ink-soft);margin-top:5px;font-weight:600" data-edit="stat.label.${i}">${s.label}</div>
           </div>`).join("")}
         </div>
       </div>
@@ -535,7 +535,7 @@ function Attractions(){
 }
 
 function Pricing(){
-  const sub = (t) => `<h3 class="reveal" style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:clamp(20px,2.4vw,26px);text-align:center;margin:46px 0 16px">${t}</h3>`;
+  const sub = (t,k) => `<h3 class="reveal"${k?` data-edit="${k}"`:''} style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:clamp(20px,2.4vw,26px);text-align:center;margin:46px 0 16px">${t}</h3>`;
   const adm = D.admission;
   return `<section style="background:var(--bg-tint);position:relative">
     ${DotField("var(--accent)",0.06)}
@@ -544,46 +544,46 @@ function Pricing(){
       <div class="wrap">
         ${SectionHead({ center:true, eyebrow:"Pricing", title:"Simple, honest play prices", lead:"Accompanying adults are always free (1–2 per child). Grip socks are required for everyone — grab a pair at the front desk for $3.", idkey:"pricing" })}
 
-        ${sub("General Admission · Daily Play")}
+        ${sub("General Admission · Daily Play","price.sub.admission")}
         <div class="card reveal" style="overflow:hidden;max-width:860px;margin-inline:auto">
           <div class="adm-headrow" style="display:grid;grid-template-columns:1.8fr 1fr 1.3fr;background:var(--navy);color:#fff;padding:15px 26px;font-family:var(--font-display);font-weight:700;font-size:13.5px">
-            <div>Guest</div><div style="text-align:center">Weekday</div><div style="text-align:center">Weekend / Holiday</div>
+            <div data-edit="adm.h.guest">Guest</div><div style="text-align:center" data-edit="adm.h.weekday">Weekday</div><div style="text-align:center" data-edit="adm.h.weekend">Weekend / Holiday</div>
           </div>
           ${adm.rows.map((r,i) => `<div class="adm-row" style="display:grid;grid-template-columns:1.8fr 1fr 1.3fr;align-items:center;padding:16px 26px;${i<adm.rows.length-1?'border-bottom:1px solid var(--line)':''}">
             <div style="display:flex;align-items:center;gap:13px">
               <span style="font-size:24px">${r.emoji}</span>
-              <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px">${r.who}</div><div class="adm-who-sub" style="font-size:13px;color:var(--ink-soft)">${r.sub}</div></div>
+              <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px" data-edit="adm.who.${i}">${r.who}</div><div class="adm-who-sub" style="font-size:13px;color:var(--ink-soft)" data-edit="adm.sub.${i}">${r.sub}</div></div>
             </div>
-            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekday==='FREE'?'var(--green)':'var(--brand)'}">${r.weekday}</div>
-            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekend==='FREE'?'var(--green)':'var(--brand)'}">${r.weekend}</div>
+            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekday==='FREE'?'var(--green)':'var(--brand)'}" data-edit="adm.wd.${i}">${r.weekday}</div>
+            <div style="text-align:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:${r.weekend==='FREE'?'var(--green)':'var(--brand)'}" data-edit="adm.we.${i}">${r.weekend}</div>
           </div>`).join("")}
         </div>
-        <p class="reveal" style="text-align:center;font-size:14px;color:var(--ink-soft);margin-top:14px">${adm.note}</p>
+        <p class="reveal" style="text-align:center;font-size:14px;color:var(--ink-soft);margin-top:14px" data-edit="adm.note">${adm.note}</p>
 
-        ${sub("Memberships & Passes")}
+        ${sub("Memberships & Passes","price.sub.passes")}
         <div class="pass-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:860px;margin-inline:auto">
           ${D.passes.map((p,i) => `<div class="card reveal" data-delay="${i*90}" style="padding:26px 28px">
             <div style="display:flex;align-items:center;gap:11px">
               <span style="font-size:26px">${p.emoji}</span>
-              <h3 style="font-size:20px;color:var(--brand)">${p.name}</h3>
+              <h3 style="font-size:20px;color:var(--brand)" data-edit="pass.name.${i}">${p.name}</h3>
             </div>
-            <p style="font-size:14.5px;margin-top:8px;color:var(--ink-soft)">${p.desc}</p>
+            <p style="font-size:14.5px;margin-top:8px;color:var(--ink-soft)" data-edit="pass.desc.${i}">${p.desc}</p>
             <div style="display:flex;gap:12px;margin-top:18px">
-              ${p.tiers.map(t => `<div style="flex:1;background:var(--bg-tint);border-radius:16px;padding:14px 10px;text-align:center">
-                <div style="font-size:12.5px;color:var(--ink-soft);font-weight:700">${t.label}</div>
-                <div style="font-family:var(--font-display);font-weight:800;font-size:27px;color:var(--brand);margin-top:3px">${t.price}</div>
+              ${p.tiers.map((t,j) => `<div style="flex:1;background:var(--bg-tint);border-radius:16px;padding:14px 10px;text-align:center">
+                <div style="font-size:12.5px;color:var(--ink-soft);font-weight:700" data-edit="pass.tlabel.${i}.${j}">${t.label}</div>
+                <div style="font-family:var(--font-display);font-weight:800;font-size:27px;color:var(--brand);margin-top:3px" data-edit="pass.tprice.${i}.${j}">${t.price}</div>
               </div>`).join("")}
             </div>
           </div>`).join("")}
         </div>
 
-        ${sub("Arcade & Concession")}
+        ${sub("Arcade & Concession","price.sub.arcade")}
         <div class="card reveal" style="padding:28px;max-width:860px;margin-inline:auto">
           <div class="arc-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
-            ${D.arcade.map(a => `<div style="text-align:center">
+            ${D.arcade.map((a,i) => `<div style="text-align:center">
               <div style="font-size:32px">${a.emoji}</div>
-              <div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px;margin-top:8px">${a.label}</div>
-              <div style="font-size:14px;color:var(--ink-soft);margin-top:4px">${a.detail}</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:16.5px;margin-top:8px" data-edit="arc.label.${i}">${a.label}</div>
+              <div style="font-size:14px;color:var(--ink-soft);margin-top:4px" data-edit="arc.detail.${i}">${a.detail}</div>
             </div>`).join("")}
           </div>
         </div>
@@ -604,32 +604,32 @@ function Packages(){
           <div style="background:color-mix(in srgb,${p.color} 14%, var(--surface));padding:26px 26px 22px;position:relative">
             ${p.featured ? `<span class="tag" style="position:absolute;top:18px;right:18px;background:${p.color};color:#fff;display:inline-flex;align-items:center;gap:5px">${Star(14,"#fff")} Most popular</span>` : ""}
             <div style="font-size:40px">${p.emoji}</div>
-            <h3 class="h-lg" style="font-size:26px;margin-top:8px;color:${p.color}">${p.name}</h3>
-            <p style="font-size:15px;color:var(--ink-soft);margin-top:6px">${p.blurb}</p>
+            <h3 class="h-lg" style="font-size:26px;margin-top:8px;color:${p.color}" data-edit="pkg.name.${i}">${p.name}</h3>
+            <p style="font-size:15px;color:var(--ink-soft);margin-top:6px" data-edit="pkg.blurb.${i}">${p.blurb}</p>
             <div style="display:flex;gap:14px;margin-top:16px;flex-wrap:wrap">
-              <span class="tag" style="background:var(--surface);color:var(--ink)">👧 ${p.kids}</span>
-              <span class="tag" style="background:var(--surface);color:var(--ink)">⏱ ${p.duration}</span>
+              <span class="tag" style="background:var(--surface);color:var(--ink)" data-edit="pkg.kids.${i}">👧 ${p.kids}</span>
+              <span class="tag" style="background:var(--surface);color:var(--ink)" data-edit="pkg.dur.${i}">⏱ ${p.duration}</span>
             </div>
           </div>
           <div style="padding:22px 26px 26px;display:flex;flex-direction:column;flex:1">
             <ul style="list-style:none;padding:0;margin:0;flex:1">
-              ${p.includes.map(it => `<li style="display:flex;gap:10px;padding:6px 0;font-size:14.5px"><span style="color:${p.color};font-weight:900">✓</span>${it}</li>`).join("")}
+              ${p.includes.map((it,j) => `<li style="display:flex;gap:10px;padding:6px 0;font-size:14.5px"><span style="color:${p.color};font-weight:900">✓</span><span data-edit="pkg.inc.${i}.${j}">${it}</span></li>`).join("")}
             </ul>
             <div style="display:flex;align-items:baseline;gap:4px;margin-top:22px">
               <span style="font-family:var(--font-display);font-weight:800;font-size:15px;color:var(--ink-soft)">$</span>
-              <span style="font-family:var(--font-display);font-weight:800;font-size:44px;color:var(--brand);line-height:1">${p.price}</span>
+              <span style="font-family:var(--font-display);font-weight:800;font-size:44px;color:var(--brand);line-height:1" data-edit="pkg.price.${i}">${p.price}</span>
               <span style="font-size:14px;color:var(--ink-soft)">from / party</span>
             </div>
             <button class="btn btn-primary" style="margin-top:16px;width:100%;background:${p.color};box-shadow:0 14px 26px -12px ${p.color}" data-book="${p.key}">Choose this package</button>
           </div>
         </div>`).join("")}
       </div>
-      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:20px">🔒 An <strong>$80 non-refundable deposit</strong> secures your booking. Cancellations within 72 hours are charged in full.</p>
+      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:20px" data-edit="pkg.deposit">🔒 An $80 non-refundable deposit secures your booking. Cancellations within 72 hours are charged in full.</p>
       <div class="card reveal" style="margin-top:18px;padding:26px 30px;display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;flex-wrap:wrap;max-width:760px;margin-inline:auto">
         <span style="font-size:34px">🎈</span>
         <div style="flex:1;min-width:220px">
-          <h3 style="color:#fff;font-size:21px">Bigger group or a custom celebration?</h3>
-          <p style="color:rgba(255,255,255,.82);font-size:15px;margin-top:4px">Group events, fundraisers, corporate family days — tell us what you're planning and we'll tailor it for you.</p>
+          <h3 style="color:#fff;font-size:21px" data-edit="pkg.custom.title">Bigger group or a custom celebration?</h3>
+          <p style="color:rgba(255,255,255,.82);font-size:15px;margin-top:4px" data-edit="pkg.custom.body">Group events, fundraisers, corporate family days — tell us what you're planning and we'll tailor it for you.</p>
         </div>
         <a class="btn btn-sun" href="tel:${D.brand.phone}">📞 Call a planner</a>
       </div>
@@ -646,18 +646,18 @@ function Visit(){
           ${SectionHead({ eyebrow:"Hours & Location", title:"Find us in Langham", lead:"On Service Road West, about 25 minutes from Saskatoon. Free parking, stroller-friendly, and fully accessible throughout.", idkey:"visit" })}
           <div class="card" style="padding:10px 26px;margin-bottom:22px">
             ${D.hours.map((h,i) => `<div style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:${i<D.hours.length-1?'1px solid var(--line)':'none'};font-size:15.5px">
-              <strong style="font-family:var(--font-display);color:var(--brand)">${h.day}</strong>
-              <span style="color:var(--ink-soft);font-weight:600">${h.time}</span>
+              <strong style="font-family:var(--font-display);color:var(--brand)" data-edit="hours.day.${i}">${h.day}</strong>
+              <span style="color:var(--ink-soft);font-weight:600" data-edit="hours.time.${i}">${h.time}</span>
             </div>`).join("")}
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap">
             <div class="card" style="padding:16px 20px;flex:1;min-width:180px">
               <div style="font-size:13px;color:var(--ink-soft);font-weight:700">📍 Address</div>
-              <div style="margin-top:6px;font-weight:700;color:var(--brand)">${D.brand.address}</div>
+              <div style="margin-top:6px;font-weight:700;color:var(--brand)" data-edit="brand.address">${D.brand.address}</div>
             </div>
             <div class="card" style="padding:16px 20px;flex:1;min-width:160px">
               <div style="font-size:13px;color:var(--ink-soft);font-weight:700">📞 Phone</div>
-              <a href="tel:${D.brand.phone}" style="margin-top:6px;font-weight:800;color:var(--accent);font-family:var(--font-display);font-size:19px;display:block">${D.brand.phone}</a>
+              <a href="tel:${D.brand.phone}" style="margin-top:6px;font-weight:800;color:var(--accent);font-family:var(--font-display);font-size:19px;display:block" data-edit="brand.phone">${D.brand.phone}</a>
             </div>
           </div>
         </div>
@@ -684,16 +684,16 @@ function About(){
       </div>
       <div>
         ${SectionHead({ eyebrow:"About Us", title:"A prairie town with a big dream", idkey:"about" })}
-        <p style="font-size:17px;color:var(--ink-soft);line-height:1.8">
+        <p style="font-size:17px;color:var(--ink-soft);line-height:1.8" data-edit="about.p1">
           7 Fundays Park was started by a local Langham family. Through the long prairie winters they kept looking for a place where kids could run wild and parents could actually enjoy a coffee — so they built one.
         </p>
-        <p style="font-size:17px;color:var(--ink-soft);line-height:1.8;margin-top:16px">
+        <p style="font-size:17px;color:var(--ink-soft);line-height:1.8;margin-top:16px" data-edit="about.p2">
           Drawing on the old grain elevators for inspiration, we tucked a little prairie story into every climbing tower and slide. It's more than a playground — it's where neighbours gather and kids let loose.
         </p>
         <div style="display:flex;gap:28px;margin-top:28px;flex-wrap:wrap">
-          ${cells.map(([a,b]) => `<div>
-            <div style="font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--accent)">${a}</div>
-            <div style="font-size:14px;color:var(--ink-soft);font-weight:600">${b}</div>
+          ${cells.map(([a,b],i) => `<div>
+            <div style="font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--accent)" data-edit="about.cellA.${i}">${a}</div>
+            <div style="font-size:14px;color:var(--ink-soft);font-weight:600" data-edit="about.cellB.${i}">${b}</div>
           </div>`).join("")}
         </div>
       </div>
@@ -726,11 +726,11 @@ function FAQ(){
           <div id="faq-list" style="display:flex;flex-direction:column;gap:12px">
             ${D.faqs.map((f,i) => `<div class="card" style="padding:0;overflow:hidden">
               <button class="faq-q" data-faq="${i}" style="width:100%;text-align:left;padding:18px 22px;display:flex;justify-content:space-between;gap:14px;align-items:center;color:var(--brand);font-family:var(--font-display);font-weight:700;font-size:16.5px">
-                ${f.q}
+                <span data-edit="faq.q.${i}">${f.q}</span>
                 <span class="faq-plus" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;transition:.25s transform;${i===0?'transform:rotate(45deg)':''}">+</span>
               </button>
               <div class="faq-a" style="max-height:${i===0?'240px':'0'};transition:max-height .3s ease;overflow:hidden">
-                <p style="padding:0 22px 20px;font-size:15px;color:var(--ink-soft);line-height:1.7">${f.a}</p>
+                <p style="padding:0 22px 20px;font-size:15px;color:var(--ink-soft);line-height:1.7" data-edit="faq.a.${i}">${f.a}</p>
               </div>
             </div>`).join("")}
           </div>
@@ -746,7 +746,7 @@ function FAQ(){
                 ["🤧","Feeling unwell? Stay home","Please pick another day if you or your child have any symptoms."]
               ].map((r,i,arr) => `<li style="display:flex;gap:13px;padding:13px 0;border-bottom:${i<arr.length-1?'1px solid var(--line)':'none'};align-items:flex-start">
                 <span style="font-size:22px;flex-shrink:0">${r[0]}</span>
-                <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:15.5px">${r[1]}</div><div style="font-size:14px;color:var(--ink-soft);margin-top:2px">${r[2]}</div></div>
+                <div><div style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:15.5px" data-edit="gtk.t.${i}">${r[1]}</div><div style="font-size:14px;color:var(--ink-soft);margin-top:2px" data-edit="gtk.d.${i}">${r[2]}</div></div>
               </li>`).join("")}
             </ul>
             <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
@@ -768,7 +768,7 @@ function Footer(){
       <div class="footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:40px">
         <div>
           <img src="assets/logo.png" alt="7 Fundays Park" style="height:66px;background:#fff;padding:10px 16px;border-radius:16px" />
-          <p style="margin-top:18px;color:#aebfd8;font-size:16px;max-width:300px">Langham's indoor prairie playground. Rain, snow or shine — the fun never stops. 🌾</p>
+          <p style="margin-top:18px;color:#aebfd8;font-size:16px;max-width:300px" data-edit="footer.tagline">Langham's indoor prairie playground. Rain, snow or shine — the fun never stops. 🌾</p>
           <div style="display:flex;gap:10px;margin-top:20px">
             ${social.map(s => `<a href="#" aria-label="${s}" style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--font-display)">${s[0]}</a>`).join("")}
           </div>
@@ -779,13 +779,13 @@ function Footer(){
         </div>
         <div>
           <h4 style="font-size:17px;margin-bottom:16px">Hours</h4>
-          ${D.hours.map(h => `<div style="font-size:14.5px;padding:4px 0;color:#aebfd8"><strong style="color:#fff;font-weight:700">${h.day}</strong><br/>${h.time}</div>`).join("")}
+          ${D.hours.map((h,i) => `<div style="font-size:14.5px;padding:4px 0;color:#aebfd8"><strong style="color:#fff;font-weight:700" data-edit="hours.day.${i}">${h.day}</strong><br/><span data-edit="hours.time.${i}">${h.time}</span></div>`).join("")}
         </div>
         <div>
           <h4 style="font-size:17px;margin-bottom:16px">Find us</h4>
-          <p style="color:#aebfd8;font-size:15px;line-height:1.7">${D.brand.address}</p>
-          <p style="margin-top:12px"><a href="tel:${D.brand.phone}" style="font-weight:800;color:#fff;font-size:18px;font-family:var(--font-display)">${D.brand.phone}</a></p>
-          <p style="margin-top:4px"><a href="mailto:${D.brand.email}">${D.brand.email}</a></p>
+          <p style="color:#aebfd8;font-size:15px;line-height:1.7" data-edit="brand.address">${D.brand.address}</p>
+          <p style="margin-top:12px"><a href="tel:${D.brand.phone}" style="font-weight:800;color:#fff;font-size:18px;font-family:var(--font-display)" data-edit="brand.phone">${D.brand.phone}</a></p>
+          <p style="margin-top:4px"><a href="mailto:${D.brand.email}" data-edit="brand.email">${D.brand.email}</a></p>
           <button class="btn btn-sun" style="margin-top:18px" data-book>🎉 Book a Party</button>
         </div>
       </div>
@@ -808,13 +808,13 @@ function Policy(){
           ${D.policy.map((p,i) => `<div class="card reveal" data-delay="${(i%2)*70}" style="padding:22px 24px;display:flex;gap:16px;align-items:flex-start">
             <span style="flex-shrink:0;width:38px;height:38px;border-radius:12px;background:var(--gold);color:var(--navy-deep);font-family:var(--font-display);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center">${i+1}</span>
             <div>
-              <h3 style="font-size:17.5px;color:var(--brand)">${p.t}</h3>
-              <p style="margin-top:6px;font-size:14.5px;color:var(--ink-soft);line-height:1.65">${p.d}</p>
+              <h3 style="font-size:17.5px;color:var(--brand)" data-edit="policy.t.${i}">${p.t}</h3>
+              <p style="margin-top:6px;font-size:14.5px;color:var(--ink-soft);line-height:1.65" data-edit="policy.d.${i}">${p.d}</p>
             </div>
           </div>`).join("")}
         </div>
         <div class="reveal" style="margin-top:20px;padding:18px 24px;border-radius:16px;background:color-mix(in srgb,var(--red) 9%,transparent);border:2px solid color-mix(in srgb,var(--red) 28%,transparent);font-size:14.5px;color:var(--ink);line-height:1.6">
-          <strong style="font-family:var(--font-display);color:var(--red)">Management disclaimer · </strong>${D.policyDisclaimer}
+          <strong style="font-family:var(--font-display);color:var(--red)">Management disclaimer · </strong><span data-edit="policy.disclaimer">${D.policyDisclaimer}</span>
         </div>
       </div>
     </div>
@@ -832,7 +832,7 @@ function Waiver(){
         <button class="btn btn-primary btn-lg" data-waiver>✍️ Sign waiver online</button>
         <a class="btn btn-ghost btn-lg" href="assets/waiver.pdf" target="_blank" rel="noopener">📄 View / download PDF</a>
       </div>
-      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:16px">Sign in about a minute — one waiver covers all your children. Issued by ${D.brand.legal}, operating as 7 Fundays Park.</p>
+      <p class="reveal" style="text-align:center;font-size:13.5px;color:var(--ink-soft);margin-top:16px" data-edit="waiver.note">Sign in about a minute — one waiver covers all your children. Issued by ${D.brand.legal}, operating as 7 Fundays Park.</p>
     </div>
   </section>`;
 }
@@ -1553,6 +1553,9 @@ const PolicyModal = {
       const k=el.getAttribute("data-edit"), v=text[k];
       if(v!=null && String(v).trim()!=="") el.textContent=v;
     });
+    // keep the click-to-call / email links in sync with edited contact text
+    const ph=text["brand.phone"]; if(ph && String(ph).trim()){ const tel="tel:"+String(ph).replace(/[^\d+]/g,""); document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.setAttribute("href",tel)); }
+    const em=text["brand.email"]; if(em && String(em).trim()){ const m="mailto:"+String(em).trim(); document.querySelectorAll('a[href^="mailto:"]').forEach(a=>a.setAttribute("href",m)); }
   }
   function buildPromos(items){
     const mount=document.getElementById("promos-mount"); if(!mount) return;

@@ -409,8 +409,8 @@ function Ph(label, style, cls){
   return `<div class="ph ${cls||''}" style="${style||''}"><span>${label}</span></div>`;
 }
 /* illustrated scene tile (SVG art behind a rounded, clipped frame) */
-function Scene(src, style, cls){
-  return `<div class="${cls||''}" style="position:relative;overflow:hidden;background:var(--surface);${style||''}"><img src="assets/${src}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" /></div>`;
+function Scene(src, style, cls, imgId){
+  return `<div class="${cls||''}" style="position:relative;overflow:hidden;background:var(--surface);${style||''}"><img ${imgId?`id="${imgId}" `:''}src="assets/${src}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" /></div>`;
 }
 function FloatingShapes(){
   const items = [
@@ -495,7 +495,7 @@ function Hero(){
         </div>
       </div>
       <div class="hero-visual" style="position:relative">
-        <div class="float" style="position:relative;z-index:2">${Scene("scene-hall.svg","aspect-ratio:4/3;border-radius:28px;box-shadow:var(--shadow-lift)")}</div>
+        <div class="float" style="position:relative;z-index:2">${Scene("scene-hall.svg","aspect-ratio:4/3;border-radius:28px;box-shadow:var(--shadow-lift)","","img-hero")}</div>
         <div class="float-2" style="position:absolute;bottom:-34px;left:-34px;width:46%;z-index:3">${Scene("scene-kids.svg","aspect-ratio:1;border-radius:22px;box-shadow:var(--shadow-lift)")}</div>
         <img src="assets/badge.png" alt="" class="float" style="position:absolute;top:-46px;right:-28px;width:130px;z-index:4;filter:drop-shadow(0 16px 22px rgba(0,0,0,.25))" />
         ${Balloon("var(--red)",56,"position:absolute;bottom:40px;right:-34px;z-index:1","floaty-slow")}
@@ -705,7 +705,7 @@ function Gallery(){
       ${SectionHead({ center:true, eyebrow:"Gallery", title:"See the giggles in action", lead:"(Swap these for your real photos later)" })}
       <div class="gal-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
         ${D.gallery.map((g,i) => `<div class="reveal" data-delay="${i*80}" style="position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow)">
-          ${Scene(["scene-hall.svg","scene-toddler.svg","scene-party.svg"][i] || "scene-hall.svg","aspect-ratio:4/3;border-radius:0")}
+          ${Scene(["scene-hall.svg","scene-toddler.svg","scene-party.svg"][i] || "scene-hall.svg","aspect-ratio:4/3;border-radius:0","","img-gallery-"+i)}
           <span style="position:absolute;left:12px;bottom:12px;background:var(--surface);color:var(--brand);font-family:var(--font-display);font-weight:700;font-size:13.5px;padding:6px 12px;border-radius:999px;box-shadow:0 4px 10px -6px rgba(0,0,0,.3)">${g}</span>
         </div>`).join("")}
       </div>
@@ -1436,7 +1436,7 @@ const PolicyModal = {
     const root = document.getElementById("root");
     root.innerHTML =
       Nav() +
-      "<main>" + Hero() + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + Waiver() + "</main>" +
+      "<main>" + Hero() + '<div id="promos-mount"></div>' + Attractions() + Pricing() + Packages() + Visit() + About() + Gallery() + FAQ() + Waiver() + "</main>" +
       Footer() +
       `<button class="btn btn-primary fab" data-book>🎉 Book a Party</button>` +
       `<div id="booking-mount"></div>` +
@@ -1536,8 +1536,56 @@ const PolicyModal = {
     document.addEventListener("keydown", (e) => { if (e.key === "Escape"){ if (Booking.open) Booking.close(); if (WaiverModal.open) WaiverModal.close(); if (PolicyModal.open) PolicyModal.close(); } });
   }
 
+  /* ---- live content: news/promos + image overrides (from api/content.php) ---- */
+  function escHtml(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function safeUrl(u){ u=String(u||"").trim(); return (/^https?:\/\//i.test(u) || u.charAt(0)==="/") ? u : ""; }
+  function applyImages(images){
+    if(!images) return;
+    if(images.hero){ const e=document.getElementById("img-hero"); if(e) e.src=images.hero; }
+    for(let i=0;i<3;i++){ const u=images["gallery"+i]; if(u){ const e=document.getElementById("img-gallery-"+i); if(e) e.src=u; } }
+  }
+  function buildPromos(items){
+    const mount=document.getElementById("promos-mount"); if(!mount) return;
+    const active=(items||[]).filter(it=>it && it.active!==false && (it.title||it.body));
+    if(!active.length){ mount.innerHTML=""; return; }
+    const cards=active.map(it=>{
+      const isNews=it.type==="news";
+      const badge=(it.badge&&String(it.badge).trim())?it.badge:(isNews?"News":"Promo");
+      const color=isNews?"var(--sky)":"var(--red)";
+      const img=safeUrl(it.image), link=safeUrl(it.link);
+      return `<article style="background:var(--surface);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;border:2px solid var(--line)">
+        ${img?`<img src="${escHtml(img)}" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;display:block" />`:''}
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:9px;flex:1">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="background:color-mix(in srgb,${color} 15%,transparent);color:${color};font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:999px">${escHtml(badge)}</span>
+            ${it.date?`<span style="font-size:12.5px;color:var(--ink-soft);font-weight:600">${escHtml(it.date)}</span>`:''}
+          </div>
+          ${it.title?`<h3 style="font-family:var(--font-display);font-weight:800;color:var(--brand);font-size:21px;line-height:1.2;margin:0">${escHtml(it.title)}</h3>`:''}
+          ${it.body?`<p style="color:var(--ink-soft);font-size:15px;line-height:1.65;white-space:pre-wrap;margin:0">${escHtml(it.body)}</p>`:''}
+          ${link?`<a href="${escHtml(link)}" target="_blank" rel="noopener" class="btn btn-primary" style="align-self:flex-start;margin-top:6px;padding:10px 20px;font-size:15px">Learn more →</a>`:''}
+        </div>
+      </article>`;
+    }).join("");
+    mount.innerHTML=`<section class="section" id="news" style="background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,transparent),transparent);padding-top:54px">
+      <div class="wrap">
+        <div style="text-align:center;max-width:720px;margin:0 auto 36px">
+          <span class="eyebrow"><span class="dot"></span>What's On</span>
+          <h2 class="h-xl" style="margin-top:14px">News &amp; Promotions</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start">${cards}</div>
+      </div>
+    </section>`;
+  }
+  function loadContent(){
+    let done=false; const t=setTimeout(()=>{done=true;},4000);
+    fetch("api/content.php",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+      if(done||!j) return; clearTimeout(t); applyImages(j.images); buildPromos(j.items);
+    }).catch(()=>{});
+  }
+
   render();
   wire();
+  loadContent();
 })();
 </script>
 </body>

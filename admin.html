@@ -65,6 +65,31 @@
   .verdict.miss{ background:#eef1f6; color:var(--soft); border:2px solid var(--line); }
   .hidden{ display:none; }
   .note{ color:var(--soft); font-size:12.5px; margin-top:14px; }
+
+  /* content editor */
+  .cpanel{ background:var(--surface); border-radius:16px; box-shadow:0 12px 30px -20px rgba(20,44,88,.4); padding:22px 24px; margin-bottom:18px; }
+  .cpanel h2{ font-size:18px; color:var(--navy); margin-bottom:4px; }
+  .csub{ color:var(--soft); font-size:13px; margin-bottom:16px; line-height:1.5; }
+  .slotgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+  .slot{ border:2px solid var(--line); border-radius:14px; padding:12px; }
+  .slot .lbl{ font-family:'Baloo 2'; font-weight:700; font-size:14px; color:var(--navy); margin-bottom:8px; }
+  .thumb{ width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px; background:#eef1f6; display:block; margin-bottom:8px; }
+  .thumb.none{ display:flex; align-items:center; justify-content:center; color:var(--soft); font-size:13px; }
+  .mini{ display:inline-block; padding:8px 14px; border-radius:10px; font-family:'Baloo 2'; font-weight:700; font-size:13.5px; cursor:pointer; }
+  .mini.up{ background:var(--sky); color:#fff; }
+  .mini.ghost{ background:#eef1f6; color:var(--soft); margin-left:6px; }
+  .item{ border:2px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .item .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .fld2 span{ display:block; font-family:'Baloo 2'; font-weight:700; font-size:13px; color:var(--navy); margin-bottom:5px; }
+  .ci{ width:100%; padding:10px 12px; border-radius:10px; border:2px solid var(--line); font-size:14.5px; font-family:inherit; outline:none; background:#fff; }
+  .ci:focus{ border-color:var(--sky); }
+  textarea.ci{ resize:vertical; min-height:80px; }
+  .switch{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; color:var(--ink); }
+  .savebar{ display:flex; align-items:center; gap:14px; position:sticky; bottom:0; background:var(--bg); padding:14px 0; }
+  .saveBtn{ background:var(--green); color:#fff; padding:13px 26px; border-radius:12px; font-family:'Baloo 2'; font-weight:800; font-size:16px; }
+  .saveBtn[disabled]{ opacity:.55; cursor:not-allowed; }
+  .addBtn{ background:color-mix(in srgb,var(--sky) 14%,transparent); color:var(--sky); padding:11px 18px; border-radius:11px; font-family:'Baloo 2'; font-weight:700; font-size:14.5px; }
+  .delBtn{ background:color-mix(in srgb,var(--red) 12%,transparent); color:var(--red); padding:8px 14px; border-radius:10px; font-family:'Baloo 2'; font-weight:700; font-size:13px; }
 </style>
 </head>
 <body>
@@ -101,13 +126,33 @@
     <div class="tabs">
       <button class="tab on" data-tab="bookings" id="tabBookings">🎉 Bookings</button>
       <button class="tab" data-tab="waivers" id="tabWaivers">✍️ Waivers</button>
+      <button class="tab" data-tab="content" id="tabContent">📣 Content</button>
     </div>
-    <div class="toolbar">
+    <div class="toolbar" id="toolbar">
       <input class="search" id="search" placeholder="Check-in: type a child or parent name…" />
       <span class="count" id="count"></span>
     </div>
     <div id="verdict"></div>
     <div id="tableArea"></div>
+
+    <!-- CONTENT EDITOR -->
+    <div id="contentPanel" class="hidden">
+      <div class="cpanel">
+        <h2>Page images</h2>
+        <div class="csub">Replace the homepage photos. Best results: landscape JPG/PNG/WEBP, around 1200×900px, under 6&nbsp;MB. Leave a slot empty to keep the current default illustration. Changes go live when you click <b>Save &amp; publish</b>.</div>
+        <div class="slotgrid" id="imageSlots"></div>
+      </div>
+      <div class="cpanel">
+        <h2>News &amp; Promotions</h2>
+        <div class="csub">These appear in the “News &amp; Promotions” block near the top of the homepage. Untick “Show on site” to hide an item without deleting it.</div>
+        <div id="itemsList"></div>
+        <button class="addBtn" id="addItem">＋ Add news / promotion</button>
+      </div>
+      <div class="savebar">
+        <button class="saveBtn" id="saveContent">✓ Save &amp; publish</button>
+        <span class="count" id="contentStatus"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -188,7 +233,13 @@ function setTab(t){
   activeTab = t;
   $("tabBookings").classList.toggle("on", t==="bookings");
   $("tabWaivers").classList.toggle("on", t==="waivers");
-  renderTable();
+  $("tabContent").classList.toggle("on", t==="content");
+  const isContent = t==="content";
+  $("toolbar").classList.toggle("hidden", isContent);
+  $("verdict").classList.toggle("hidden", isContent);
+  $("tableArea").classList.toggle("hidden", isContent);
+  $("contentPanel").classList.toggle("hidden", !isContent);
+  if(isContent) loadContentAdmin(); else renderTable();
 }
 
 function tabLabels(){
@@ -226,6 +277,104 @@ $("search").addEventListener("input", renderTable);
 document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.getAttribute("data-tab"))));
 $("refreshBtn").addEventListener("click", () => { const k = sessionStorage.getItem("fd_admin_key"); if(k){ $("refreshBtn").textContent="↻ …"; load(k, ()=>{}); setTimeout(()=>$("refreshBtn").textContent="↻ Refresh",1200); } });
 $("logoutBtn").addEventListener("click", () => { sessionStorage.removeItem("fd_admin_key"); $("dash").classList.add("hidden"); $("login").classList.remove("hidden"); $("pass").value=""; });
+
+/* ===== Content editor (page images + news/promos) — same-origin PHP API ===== */
+const CONTENT_API = "api/content.php";
+const UPLOAD_API  = "api/upload.php";
+let CONTENT = { images:{}, items:[] };
+const IMG_SLOTS = [
+  {key:"hero",     label:"Hero (top) image"},
+  {key:"gallery0", label:"Gallery photo 1"},
+  {key:"gallery1", label:"Gallery photo 2"},
+  {key:"gallery2", label:"Gallery photo 3"}
+];
+
+function loadContentAdmin(){
+  $("contentStatus").textContent = "Loading…";
+  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+    CONTENT = { images:(j&&j.images&&typeof j.images==="object")?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
+    renderContentEditor(); $("contentStatus").textContent="";
+  }).catch(()=>{ CONTENT={images:{},items:[]}; renderContentEditor(); $("contentStatus").textContent="(couldn't load — starting fresh)"; });
+}
+
+function renderContentEditor(){
+  $("imageSlots").innerHTML = IMG_SLOTS.map(s=>{
+    const url = CONTENT.images[s.key];
+    const thumb = url ? `<img class="thumb" src="${esc(url)}" alt="" />` : `<div class="thumb none">Using default</div>`;
+    return `<div class="slot"><div class="lbl">${esc(s.label)}</div>${thumb}
+      <label class="mini up">Upload<input type="file" accept="image/*" data-img-slot="${esc(s.key)}" style="display:none"></label>
+      ${url?`<button class="mini ghost" data-img-reset="${esc(s.key)}">Reset</button>`:''}</div>`;
+  }).join("");
+  $("itemsList").innerHTML = CONTENT.items.length ? CONTENT.items.map((it,i)=>itemHtml(it,i)).join("") : '<p class="csub">No items yet — click “Add news / promotion” below.</p>';
+}
+
+function itemHtml(it,i){
+  const img = it.image;
+  return `<div class="item">
+    <div class="row">
+      <label class="fld2"><span>Type</span>
+        <select class="ci" data-field="type" data-i="${i}">
+          <option value="promo"${it.type!=="news"?" selected":""}>Promotion</option>
+          <option value="news"${it.type==="news"?" selected":""}>News</option>
+        </select></label>
+      <label class="switch" style="align-self:end;padding-bottom:9px"><input type="checkbox" data-field="active" data-i="${i}" ${it.active!==false?"checked":""} style="width:18px;height:18px;accent-color:var(--green)"> Show on site</label>
+    </div>
+    <label class="fld2" style="display:block;margin-bottom:12px"><span>Title</span><input class="ci" data-field="title" data-i="${i}" value="${esc(it.title||"")}" placeholder="e.g. Summer Splash Special"></label>
+    <label class="fld2" style="display:block;margin-bottom:12px"><span>Body</span><textarea class="ci" data-field="body" data-i="${i}" placeholder="Details of the promotion or news…">${esc(it.body||"")}</textarea></label>
+    <div class="row">
+      <label class="fld2"><span>Badge (optional)</span><input class="ci" data-field="badge" data-i="${i}" value="${esc(it.badge||"")}" placeholder="e.g. 20% OFF"></label>
+      <label class="fld2"><span>Date label (optional)</span><input class="ci" data-field="date" data-i="${i}" value="${esc(it.date||"")}" placeholder="e.g. Jul 1–31"></label>
+    </div>
+    <label class="fld2" style="display:block;margin-bottom:12px"><span>Link (optional)</span><input class="ci" data-field="link" data-i="${i}" value="${esc(it.link||"")}" placeholder="https://…"></label>
+    <div class="row" style="align-items:center">
+      <div>${img?`<img class="thumb" style="max-width:220px;aspect-ratio:16/9" src="${esc(img)}" alt="">`:'<div class="csub">No image</div>'}
+        <label class="mini up">Upload image<input type="file" accept="image/*" data-item-img="${i}" style="display:none"></label>
+        ${img?`<button class="mini ghost" data-item-img-reset="${i}">Remove</button>`:''}</div>
+      <div style="text-align:right"><button class="delBtn" data-item-del="${i}">Delete item</button></div>
+    </div>
+  </div>`;
+}
+
+function doUpload(input, cb){
+  const file = input.files && input.files[0]; if(!file){ return; }
+  const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
+  $("contentStatus").textContent = "Uploading image…";
+  const fd = new FormData(); fd.append("key", key); fd.append("image", file);
+  fetch(UPLOAD_API, {method:"POST", body:fd}).then(r=>r.json()).then(j=>{
+    if(j && j.ok){ $("contentStatus").textContent="Image uploaded ✓  (click Save & publish to go live)"; cb(j.url); }
+    else { $("contentStatus").textContent=""; alert("Upload failed: "+((j&&j.error)||"unknown error")); }
+  }).catch(()=>{ $("contentStatus").textContent=""; alert("Upload failed (network)."); });
+  input.value = "";
+}
+
+(function wireContent(){
+  const p = $("contentPanel");
+  const upd = el => { if(!el.hasAttribute("data-field")) return; const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(!CONTENT.items[i]) return; CONTENT.items[i][f] = (el.type==="checkbox") ? el.checked : el.value; };
+  p.addEventListener("input", e=>upd(e.target));
+  p.addEventListener("change", e=>{
+    const el=e.target;
+    if(el.hasAttribute("data-field")){ upd(el); return; }
+    if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderContentEditor(); }); return; }
+    if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderContentEditor(); } }); return; }
+  });
+  p.addEventListener("click", e=>{
+    const el=e.target;
+    if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderContentEditor(); return; }
+    if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderContentEditor(); } return; }
+    if(el.hasAttribute("data-item-del")){ const i=+el.getAttribute("data-item-del"); if(confirm("Delete this item?")){ CONTENT.items.splice(i,1); renderContentEditor(); } return; }
+  });
+  $("addItem").addEventListener("click", ()=>{ CONTENT.items.push({type:"promo",title:"",body:"",badge:"",date:"",link:"",image:"",active:true}); renderContentEditor(); });
+  $("saveContent").addEventListener("click", ()=>{
+    const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
+    $("saveContent").disabled=true; $("contentStatus").textContent="Saving…";
+    const fd = new FormData(); fd.append("key", key); fd.append("payload", JSON.stringify({images:CONTENT.images, items:CONTENT.items}));
+    fetch(CONTENT_API, {method:"POST", body:fd}).then(r=>r.json()).then(j=>{
+      $("saveContent").disabled=false;
+      if(j && j.ok){ $("contentStatus").textContent="Saved & published ✓"; }
+      else { $("contentStatus").textContent=""; alert("Save failed: "+((j&&j.error)||"unknown error")); }
+    }).catch(()=>{ $("saveContent").disabled=false; $("contentStatus").textContent=""; alert("Save failed (network)."); });
+  });
+})();
 
 // auto-login if session key present
 (() => { const k = sessionStorage.getItem("fd_admin_key"); if(k) load(k, ()=>{}); })();

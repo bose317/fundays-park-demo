@@ -7,3 +7,6 @@ deployment:
     - /bin/cp -f .htaccess $DEPLOYPATH/.htaccess
     - /bin/mkdir -p $DEPLOYPATH/assets
     - /bin/cp -Rf assets/. $DEPLOYPATH/assets/
+    - /bin/mkdir -p $DEPLOYPATH/api
+    - /bin/cp -f api/content.php $DEPLOYPATH/api/content.php
+    - /bin/cp -f api/upload.php $DEPLOYPATH/api/upload.php

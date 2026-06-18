@@ -4,5 +4,6 @@ deployment:
     - export DEPLOYPATH=/home/z7fun169/public_html
     - /bin/cp -f index.html $DEPLOYPATH/index.html
     - /bin/cp -f admin.html $DEPLOYPATH/admin.html
+    - /bin/cp -f .htaccess $DEPLOYPATH/.htaccess
     - /bin/mkdir -p $DEPLOYPATH/assets
     - /bin/cp -Rf assets/. $DEPLOYPATH/assets/

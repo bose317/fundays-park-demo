@@ -127,6 +127,7 @@
       <button class="tab on" data-tab="bookings" id="tabBookings">🎉 Bookings</button>
       <button class="tab" data-tab="waivers" id="tabWaivers">✍️ Waivers</button>
       <button class="tab" data-tab="content" id="tabContent">📣 Content</button>
+      <button class="tab" data-tab="text" id="tabText">📝 Text</button>
     </div>
     <div class="toolbar" id="toolbar">
       <input class="search" id="search" placeholder="Check-in: type a child or parent name…" />
@@ -151,6 +152,19 @@
       <div class="savebar">
         <button class="saveBtn" id="saveContent">✓ Save &amp; publish</button>
         <span class="count" id="contentStatus"></span>
+      </div>
+    </div>
+
+    <!-- TEXT EDITOR -->
+    <div id="textPanel" class="hidden">
+      <div class="cpanel">
+        <h2>Page text</h2>
+        <div class="csub">Edit the wording shown on the homepage (top to bottom). Change a box to override it; clear a box to reset it to the default. Click <b>Save &amp; publish</b> to go live.</div>
+        <div id="textFields"><p class="csub">Loading…</p></div>
+      </div>
+      <div class="savebar">
+        <button class="saveBtn" id="saveText">✓ Save &amp; publish</button>
+        <span class="count" id="textStatus"></span>
       </div>
     </div>
   </div>
@@ -234,12 +248,16 @@ function setTab(t){
   $("tabBookings").classList.toggle("on", t==="bookings");
   $("tabWaivers").classList.toggle("on", t==="waivers");
   $("tabContent").classList.toggle("on", t==="content");
-  const isContent = t==="content";
-  $("toolbar").classList.toggle("hidden", isContent);
-  $("verdict").classList.toggle("hidden", isContent);
-  $("tableArea").classList.toggle("hidden", isContent);
+  $("tabText").classList.toggle("on", t==="text");
+  const isContent = t==="content", isText = t==="text", isTable = (!isContent && !isText);
+  $("toolbar").classList.toggle("hidden", !isTable);
+  $("verdict").classList.toggle("hidden", !isTable);
+  $("tableArea").classList.toggle("hidden", !isTable);
   $("contentPanel").classList.toggle("hidden", !isContent);
-  if(isContent) loadContentAdmin(); else renderTable();
+  $("textPanel").classList.toggle("hidden", !isText);
+  if(isContent) loadContentAdmin();
+  else if(isText) loadTextEditor();
+  else renderTable();
 }
 
 function tabLabels(){
@@ -286,7 +304,15 @@ const IMG_SLOTS = [
   {key:"hero",     label:"Hero (top) image"},
   {key:"gallery0", label:"Gallery photo 1"},
   {key:"gallery1", label:"Gallery photo 2"},
-  {key:"gallery2", label:"Gallery photo 3"}
+  {key:"gallery2", label:"Gallery photo 3"},
+  {key:"attr0", label:"Eight Worlds 1 · Grain Elevator Climber"},
+  {key:"attr1", label:"Eight Worlds 2 · Speedway Slides"},
+  {key:"attr2", label:"Eight Worlds 3 · Wheatfield Ball Ocean"},
+  {key:"attr3", label:"Eight Worlds 4 · Little Sprouts Zone"},
+  {key:"attr4", label:"Eight Worlds 5 · Rocket Trampoline Bay"},
+  {key:"attr5", label:"Eight Worlds 6 · Games Town"},
+  {key:"attr6", label:"Eight Worlds 7 · Whistle Stop Café"},
+  {key:"attr7", label:"Eight Worlds 8 · Quiet Sensory Room"}
 ];
 
 function loadContentAdmin(){
@@ -365,16 +391,104 @@ function doUpload(input, cb){
   });
   $("addItem").addEventListener("click", ()=>{ CONTENT.items.push({type:"promo",title:"",body:"",badge:"",date:"",link:"",image:"",active:true}); renderContentEditor(); });
   $("saveContent").addEventListener("click", ()=>{
-    const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
-    $("saveContent").disabled=true; $("contentStatus").textContent="Saving…";
-    const fd = new FormData(); fd.append("key", key); fd.append("payload", JSON.stringify({images:CONTENT.images, items:CONTENT.items}));
-    fetch(CONTENT_API, {method:"POST", body:fd}).then(r=>r.json()).then(j=>{
-      $("saveContent").disabled=false;
-      if(j && j.ok){ $("contentStatus").textContent="Saved & published ✓"; }
-      else { $("contentStatus").textContent=""; alert("Save failed: "+((j&&j.error)||"unknown error")); }
-    }).catch(()=>{ $("saveContent").disabled=false; $("contentStatus").textContent=""; alert("Save failed (network)."); });
+    saveAll({images:CONTENT.images, items:CONTENT.items}, $("saveContent"), $("contentStatus"));
   });
 })();
+
+/* Save helper — merges the given parts with whatever is already stored so one tab never wipes another's data */
+function saveAll(partial, btn, statusEl){
+  const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
+  btn.disabled = true; statusEl.textContent = "Saving…";
+  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():{}).then(cur=>{
+    cur = cur || {};
+    const obj = {
+      images: ('images' in partial) ? partial.images : ((cur.images && !Array.isArray(cur.images)) ? cur.images : {}),
+      items:  ('items'  in partial) ? partial.items  : (Array.isArray(cur.items) ? cur.items : []),
+      text:   ('text'   in partial) ? partial.text   : ((cur.text && !Array.isArray(cur.text)) ? cur.text : {})
+    };
+    const fd = new FormData(); fd.append("key", key); fd.append("payload", JSON.stringify(obj));
+    return fetch(CONTENT_API, {method:"POST", body:fd}).then(r=>r.json());
+  }).then(j=>{
+    btn.disabled = false;
+    if(j && j.ok){ statusEl.textContent = "Saved & published ✓"; }
+    else { statusEl.textContent=""; alert("Save failed: "+((j&&j.error)||"unknown error")); }
+  }).catch(()=>{ btn.disabled=false; statusEl.textContent=""; alert("Save failed (network)."); });
+}
+
+/* ===== Page-text editor — auto-discovers editable strings from the live homepage ===== */
+let TEXT = {};          // saved overrides {key:value}
+let TEXT_DEFAULTS = {}; // {key:defaultText} discovered from the homepage (raw mode)
+let TEXT_ORDER = [];    // keys in page order
+
+function humanizeKey(k){
+  const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+  const p = k.split(".");
+  if(p[0]==="sec")  return cap(p[1])+" section · "+p[2];
+  if(p[0]==="hero") return "Hero · "+p[1];
+  if(p[0]==="attr") return "Attraction "+(parseInt(p[2],10)+1)+" · "+p[1];
+  return k;
+}
+
+function loadTextEditor(){
+  $("textStatus").textContent = "Loading…";
+  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+    TEXT = (j && j.text && typeof j.text==="object" && !Array.isArray(j.text)) ? j.text : {};
+    discoverDefaults(renderTextFields);
+  }).catch(()=>{ TEXT={}; discoverDefaults(renderTextFields); });
+}
+
+function discoverDefaults(cb){
+  let frame = document.getElementById("rawFrame");
+  if(frame) frame.remove();
+  frame = document.createElement("iframe");
+  frame.id = "rawFrame";
+  frame.style.cssText = "position:absolute;left:-9999px;top:-9999px;width:1200px;height:20px;border:0";
+  frame.src = "/?raw=1&cb=" + Date.now();
+  let done = false;
+  const grab = () => {
+    if(done) return;
+    try{
+      const els = frame.contentDocument.querySelectorAll("[data-edit]");
+      if(!els.length) return;          // not rendered yet — wait for next try
+      done = true;
+      TEXT_DEFAULTS = {}; TEXT_ORDER = [];
+      els.forEach(el => {
+        const k = el.getAttribute("data-edit");
+        if(!(k in TEXT_DEFAULTS)){ TEXT_DEFAULTS[k] = el.textContent.trim().replace(/\s+/g," "); TEXT_ORDER.push(k); }
+      });
+      frame.remove(); cb();
+    }catch(e){}
+  };
+  frame.onload = () => { setTimeout(grab, 350); setTimeout(grab, 1000); setTimeout(grab, 2200); };
+  document.body.appendChild(frame);
+  setTimeout(() => { if(!done){ done = true; cb(); } }, 5000);
+}
+
+function renderTextFields(){
+  $("textStatus").textContent = "";
+  if(!TEXT_ORDER.length){ $("textFields").innerHTML = '<p class="csub">Couldn\'t load the page text — please click '+'↻ Refresh'+' and reopen this tab.</p>'; return; }
+  $("textFields").innerHTML = TEXT_ORDER.map(k=>{
+    const def = TEXT_DEFAULTS[k] || "";
+    const cur = (TEXT[k]!=null) ? TEXT[k] : def;
+    const field = (def.length>56)
+      ? `<textarea class="ci" data-tkey="${esc(k)}" rows="2">${esc(cur)}</textarea>`
+      : `<input class="ci" data-tkey="${esc(k)}" value="${esc(cur)}" />`;
+    return `<label class="fld2" style="display:block;margin-bottom:14px"><span>${esc(humanizeKey(k))}</span>${field}</label>`;
+  }).join("");
+}
+
+$("saveText").addEventListener("click", ()=>{
+  const out = {};
+  $("textFields").querySelectorAll("[data-tkey]").forEach(el=>{
+    const k = el.getAttribute("data-tkey"), v = el.value;
+    const def = TEXT_DEFAULTS[k] || "";
+    if(v.trim() !== "" && v.trim() !== def.trim()) out[k] = v;   // only store real overrides
+  });
+  TEXT = out;
+  saveAll({text: out}, $("saveText"), $("textStatus"));
+});
+
+// auto-login if session key present
 
 // auto-login if session key present
 (() => { const k = sessionStorage.getItem("fd_admin_key"); if(k) load(k, ()=>{}); })();

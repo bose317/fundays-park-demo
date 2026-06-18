@@ -11,7 +11,7 @@ $FILE    = $CMS . '/content.json';
 $KEYFILE = $CMS . '/cms_key.txt';
 
 function out($o){ echo json_encode($o, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
-function defaults(){ return ['updated' => '', 'images' => new stdClass(), 'text' => new stdClass(), 'items' => []]; }
+function defaults(){ return ['updated' => '', 'images' => new stdClass(), 'text' => new stdClass(), 'themes' => [], 'items' => []]; }
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -40,8 +40,9 @@ if ($method === 'POST') {
   }
   $images = (isset($j['images']) && is_array($j['images']) && count($j['images'])) ? $j['images'] : new stdClass();
   $text   = (isset($j['text'])   && is_array($j['text'])   && count($j['text']))   ? $j['text']   : new stdClass();
+  $themes = (isset($j['themes']) && is_array($j['themes'])) ? array_slice($j['themes'], 0, 9) : [];
   $items  = (isset($j['items'])  && is_array($j['items']))  ? array_slice($j['items'], 0, 50) : [];
-  $clean = ['updated' => date('c'), 'images' => $images, 'text' => $text, 'items' => $items];
+  $clean = ['updated' => date('c'), 'images' => $images, 'text' => $text, 'themes' => $themes, 'items' => $items];
   if (!is_dir($CMS)) @mkdir($CMS, 0700, true);
   if (file_put_contents($FILE, json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) === false) {
     http_response_code(500);

@@ -431,6 +431,30 @@ function FloatingShapes(){
   return `<div aria-hidden="true" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0">${inner}</div>`;
 }
 
+/* one "Eight Worlds" theme card — used by Attractions() and the dynamic re-render */
+function themeCardHTML(a, i){
+  const e = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const PAL = ["var(--gold)","var(--red)","var(--green)","var(--teal)","var(--purple)","var(--sky)","var(--orange)","var(--pink)","var(--navy)"];
+  const color = (a && a.color) ? a.color : PAL[i % PAL.length];
+  const emoji = (a && a.emoji) ? a.emoji : "🎈";
+  const img = (a && a.image && (/^https?:\/\//i.test(a.image) || String(a.image).charAt(0)==="/")) ? a.image : "";
+  return `<div class="card lift" style="overflow:hidden;display:flex;flex-direction:column">
+    <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(140deg, color-mix(in srgb,${color} 30%, var(--surface)), color-mix(in srgb,${color} 8%, var(--surface)))">
+      ${DotField(color,0.18)}
+      <span style="font-size:62px;position:relative;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14))">${e(emoji)}</span>
+      ${img?`<img alt="" loading="lazy" src="${e(img)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`:''}
+    </div>
+    <div style="padding:20px 20px 24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:26px">${e(emoji)}</span>
+        ${(a&&a.tag)?`<span class="tag" style="background:color-mix(in srgb,${color} 16%, transparent);color:${color};margin-left:auto">${e(a.tag)}</span>`:''}
+      </div>
+      <h3 class="h-lg" style="font-size:22px">${e(a&&a.title)}</h3>
+      <p style="margin-top:8px;font-size:15px;color:var(--ink-soft)">${e(a&&a.desc)}</p>
+    </div>
+  </div>`;
+}
+
 /* section heading helper */
 function SectionHead({ eyebrow, title, lead, center, light, squiggle = true, idkey }){
   const align = center ? "center" : "left";
@@ -513,22 +537,8 @@ function Attractions(){
     ${Star(28,"var(--gold)","position:absolute;top:60px;right:8%;opacity:.5;animation:wiggle 5s ease-in-out infinite")}
     <div class="wrap" style="position:relative">
       ${SectionHead({ eyebrow:"The Play", title:"Eight worlds of giggles", lead:"From wobbly first steps to high-energy big kids, every corner has an adventure waiting.", idkey:"attractions" })}
-      <div class="attr-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
-        ${D.attractions.map((a,i) => `<div class="card lift reveal" data-delay="${(i%4)*80}" style="overflow:hidden;display:flex;flex-direction:column">
-          <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:linear-gradient(140deg, color-mix(in srgb,${a.color} 30%, var(--surface)), color-mix(in srgb,${a.color} 8%, var(--surface)))">
-            ${DotField(a.color,0.18)}
-            <span style="font-size:62px;position:relative;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14))">${a.emoji}</span>
-            <img id="img-attr-${i}" alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" />
-          </div>
-          <div style="padding:20px 20px 24px">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span style="font-size:26px">${a.emoji}</span>
-              <span class="tag" style="background:color-mix(in srgb,${a.color} 16%, transparent);color:${a.color};margin-left:auto">${a.tag}</span>
-            </div>
-            <h3 class="h-lg" data-edit="attr.title.${i}" style="font-size:22px">${a.title}</h3>
-            <p data-edit="attr.desc.${i}" style="margin-top:8px;font-size:15px;color:var(--ink-soft)">${a.desc}</p>
-          </div>
-        </div>`).join("")}
+      <div class="attr-grid" id="attr-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:20px">
+        ${D.attractions.map((a,i)=>themeCardHTML(a,i)).join("")}
       </div>
     </div>
   </section>`;
@@ -1545,7 +1555,11 @@ const PolicyModal = {
     if(!images) return;
     if(images.hero){ const e=document.getElementById("img-hero"); if(e) e.src=images.hero; }
     for(let i=0;i<3;i++){ const u=images["gallery"+i]; if(u){ const e=document.getElementById("img-gallery-"+i); if(e) e.src=u; } }
-    for(let i=0;i<8;i++){ const u=images["attr"+i]; if(u){ const e=document.getElementById("img-attr-"+i); if(e){ e.src=u; e.style.display="block"; } } }
+  }
+  function renderThemes(list){
+    const grid=document.getElementById("attr-grid");
+    if(!grid || !Array.isArray(list) || list.length<3) return;   // need at least 3; else keep defaults
+    grid.innerHTML = list.slice(0,9).map((a,i)=>themeCardHTML(a,i)).join("");
   }
   function applyText(text){
     if(!text) return;
@@ -1593,7 +1607,7 @@ const PolicyModal = {
     if(/[?&]raw=1/.test(location.search)) return;   // raw mode: pure defaults (used by admin's text editor)
     let done=false; const t=setTimeout(()=>{done=true;},4000);
     fetch("api/content.php",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-      if(done||!j) return; clearTimeout(t); applyImages(j.images); applyText(j.text); buildPromos(j.items);
+      if(done||!j) return; clearTimeout(t); applyImages(j.images); applyText(j.text); renderThemes(j.themes); buildPromos(j.items);
     }).catch(()=>{});
   }
 

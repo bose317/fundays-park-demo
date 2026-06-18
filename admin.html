@@ -285,7 +285,17 @@ let CONTENT = { images:{}, items:[] };
 let TEXT = {}, TEXT_DEFAULTS = {}, TEXT_ORDER = [];
 let OPEN = { 0:true };   // which section cards are expanded
 
-const ATTR_LABELS = ["Grain Elevator Climber","Speedway Slides","Wheatfield Ball Ocean","Little Sprouts Zone","Rocket Trampoline Bay","Games Town","Whistle Stop Café","Quiet Sensory Room"];
+let THEMES = [];   // the "Eight Worlds" theme cards (editable, 3–9)
+const THEME_DEFAULTS = [
+  {emoji:"🌾",title:"Grain Elevator Climber",tag:"Ages 5–12",desc:"A multi-level soft-play maze inspired by prairie grain elevators — tunnels, rope nets and wobble bridges all the way up."},
+  {emoji:"🛝",title:"Speedway Slides",tag:"All ages",desc:"Four side-by-side wave slides plus a spiral black-hole tube. Race a friend to the bottom!"},
+  {emoji:"🟡",title:"Wheatfield Ball Ocean",tag:"All ages",desc:"A golden pit of ten thousand balls with blaster cannons and a basketball hoop."},
+  {emoji:"🌱",title:"Little Sprouts Zone",tag:"Ages 0–4",desc:"A soft, fenced area built just for ages 0–4 — gentle ramps, a sensory wall and a calm corner."},
+  {emoji:"🚀",title:"Rocket Trampoline Bay",tag:"Ages 5+",desc:"Connected trampolines and a foam pit — blast off on a prairie space adventure."},
+  {emoji:"🕹️",title:"Games Town",tag:"All ages",desc:"A hand-picked arcade with hoops, ticket games and a prize counter to take a treasure home."},
+  {emoji:"☕",title:"Whistle Stop Café",tag:"For parents",desc:"A grown-up retreat — fresh coffee, healthy snacks and big windows to watch the fun."},
+  {emoji:"✨",title:"Quiet Sensory Room",tag:"Inclusive",desc:"A soft-lit, low-stimulation space for little ones who need a breather."}
+];
 const SECTIONS = [
   { id:"hero", title:"① 顶部主视觉 Hero", thumb:"hero.jpg",
     images:[{key:"hero", label:"主视觉大图"}],
@@ -293,8 +303,8 @@ const SECTIONS = [
   { id:"news", title:"② 新闻 / 促销 News & Promotions", thumb:"news.jpg",
     images:[], promos:true, text:k=>false },
   { id:"attractions", title:"③ 八大主题 Eight Worlds", thumb:"attractions.jpg",
-    images:ATTR_LABELS.map((l,i)=>({key:"attr"+i, label:"World "+(i+1)+" · "+l})),
-    text:k=>k.indexOf("sec.attractions.")===0 || k.indexOf("attr.title.")===0 || k.indexOf("attr.desc.")===0 },
+    images:[], themes:true,
+    text:k=>k.indexOf("sec.attractions.")===0 },
   { id:"pricing", title:"④ 价格 Pricing", thumb:"pricing.jpg",
     images:[], text:k=>k.indexOf("sec.pricing.")===0 || k.indexOf("price.")===0 || k.indexOf("adm.")===0 || k.indexOf("pass.")===0 || k.indexOf("arc.")===0 },
   { id:"packages", title:"⑤ 派对 / 预订 Birthdays & Parties", thumb:"packages.jpg",
@@ -341,8 +351,9 @@ function loadPageEditor(){
   fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
     CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
     TEXT = (j&&j.text&&typeof j.text==="object"&&!Array.isArray(j.text))?j.text:{};
+    THEMES = (j&&Array.isArray(j.themes)&&j.themes.length>=3)?j.themes.map(t=>Object.assign({},t)):THEME_DEFAULTS.map(t=>Object.assign({},t));
     discoverDefaults(renderSections);
-  }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; discoverDefaults(renderSections); });
+  }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; THEMES=THEME_DEFAULTS.map(t=>Object.assign({},t)); discoverDefaults(renderSections); });
 }
 
 function renderSections(){
@@ -367,11 +378,18 @@ function renderSections(){
     const promos = sec.promos
       ? `<div>${CONTENT.items.length?CONTENT.items.map((it,i)=>itemHtml(it,i)).join(""):'<p class="csub">还没有促销 / 新闻，点下面按钮添加。</p>'}</div><button class="addBtn" data-add-item>＋ 添加促销 / 新闻</button>`
       : "";
-    const hasContent = sec.images.length || sec.promos || fields;
+    const themesBlock = sec.themes
+      ? `<div class="csub" style="margin-top:14px">八大主题 —— 每个主题的<b>图片＋图标＋名称＋描述</b>放在一起改。最少 3 个、最多 9 个；改了数量首页会<b>自动排版</b>。</div>
+         ${THEMES.map((t,i)=>themeEditorHTML(t,i,THEMES.length)).join("")}
+         <button class="addBtn" data-th-add${THEMES.length>=9?' disabled style="opacity:.45;cursor:not-allowed"':''}>＋ 添加主题（${THEMES.length}/9）</button>`
+      : "";
+    const hasContent = sec.images.length || sec.promos || sec.themes || fields;
     const body = `<div class="secbody"${OPEN[si]?'':' style="display:none"'}>
       ${sec.images.length?`<div class="csub">图片（点「上传」换图，留空＝用默认插画）</div><div class="slotgrid" style="margin-bottom:12px">${imgs}</div>`:''}
       ${promos}
-      ${fields?`<div class="csub" style="margin-top:6px">文字（改框＝覆盖，清空＝恢复默认）</div>${fields}`:(hasContent?'':'<p class="csub">这一版块暂无可编辑内容。</p>')}
+      ${fields?`<div class="csub" style="margin-top:6px">文字（改框＝覆盖，清空＝恢复默认）</div>${fields}`:''}
+      ${themesBlock}
+      ${hasContent?'':'<p class="csub">这一版块暂无可编辑内容。</p>'}
     </div>`;
     return `<div class="seccard">
       <div class="sechead" data-sec-toggle="${si}">
@@ -410,6 +428,28 @@ function itemHtml(it,i){
   </div>`;
 }
 
+function themeEditorHTML(t, i, count){
+  const img = t.image;
+  return `<div class="item">
+    <div class="row" style="grid-template-columns:96px 1fr;align-items:start">
+      <div>
+        ${img?`<img class="thumb" style="aspect-ratio:1" src="${esc(img)}">`:`<div class="thumb none" style="aspect-ratio:1">默认<br>emoji</div>`}
+        <label class="mini up" style="margin-top:6px">图片<input type="file" accept="image/*" data-th-img="${i}" style="display:none"></label>
+        ${img?`<button class="mini ghost" data-th-imgreset="${i}">移除图</button>`:''}
+      </div>
+      <div>
+        <div class="row">
+          <label class="fld2"><span>图标 Emoji</span><input class="ci" data-th-i="${i}" data-th-f="emoji" value="${esc(t.emoji||"")}" placeholder="🎈"></label>
+          <label class="fld2"><span>标签 Tag</span><input class="ci" data-th-i="${i}" data-th-f="tag" value="${esc(t.tag||"")}" placeholder="如 All ages"></label>
+        </div>
+        <label class="fld2" style="display:block;margin-top:10px"><span>名称 Title</span><input class="ci" data-th-i="${i}" data-th-f="title" value="${esc(t.title||"")}"></label>
+        <label class="fld2" style="display:block;margin-top:10px"><span>描述 Description</span><textarea class="ci" data-th-i="${i}" data-th-f="desc">${esc(t.desc||"")}</textarea></label>
+        <div style="text-align:right;margin-top:8px"><button class="delBtn" data-th-del="${i}"${count<=3?' disabled style="opacity:.4;cursor:not-allowed" title="最少 3 个主题"':''}>删除主题</button></div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function doUpload(input, cb){
   const file = input.files && input.files[0]; if(!file){ return; }
   const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
@@ -427,6 +467,7 @@ function doUpload(input, cb){
   p.addEventListener("input", e=>{
     const el=e.target;
     if(el.hasAttribute("data-tkey")){ TEXT[el.getAttribute("data-tkey")] = el.value; return; }
+    if(el.hasAttribute("data-th-i")){ const i=+el.getAttribute("data-th-i"), f=el.getAttribute("data-th-f"); if(THEMES[i]) THEMES[i][f]=el.value; return; }
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; }
   });
   p.addEventListener("change", e=>{
@@ -434,21 +475,25 @@ function doUpload(input, cb){
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; return; }
     if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderSections(); }); return; }
     if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderSections(); } }); return; }
+    if(el.hasAttribute("data-th-img")){ const i=+el.getAttribute("data-th-img"); doUpload(el, url=>{ if(THEMES[i]){ THEMES[i].image=url; renderSections(); } }); return; }
   });
   p.addEventListener("click", e=>{
-    const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item]");
+    const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item],[data-th-add],[data-th-del],[data-th-imgreset]");
     if(!el) return;
     if(el.hasAttribute("data-sec-toggle")){ const i=+el.getAttribute("data-sec-toggle"); OPEN[i]=!OPEN[i]; renderSections(); return; }
     if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderSections(); return; }
     if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderSections(); } return; }
     if(el.hasAttribute("data-item-del")){ const i=+el.getAttribute("data-item-del"); if(confirm("删除这一条？")){ CONTENT.items.splice(i,1); renderSections(); } return; }
     if(el.hasAttribute("data-add-item")){ CONTENT.items.push({type:"promo",title:"",body:"",badge:"",date:"",link:"",image:"",active:true}); renderSections(); return; }
+    if(el.hasAttribute("data-th-add")){ if(THEMES.length<9){ THEMES.push({emoji:"🎈",title:"新主题 New theme",tag:"",desc:"",image:""}); renderSections(); } return; }
+    if(el.hasAttribute("data-th-del")){ const i=+el.getAttribute("data-th-del"); if(THEMES.length>3 && confirm("删除这个主题？")){ THEMES.splice(i,1); renderSections(); } return; }
+    if(el.hasAttribute("data-th-imgreset")){ const i=+el.getAttribute("data-th-imgreset"); if(THEMES[i]){ THEMES[i].image=""; renderSections(); } return; }
   });
   $("savePage").addEventListener("click", ()=>{
     const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
     $("savePage").disabled=true; $("pageStatus").textContent="保存中…";
     const out={}; p.querySelectorAll("[data-tkey]").forEach(el=>{ const k=el.getAttribute("data-tkey"), v=el.value, def=TEXT_DEFAULTS[k]||""; if(v.trim()!=="" && v.trim()!==def.trim()) out[k]=v; });
-    const obj={ images:CONTENT.images, items:CONTENT.items, text:out };
+    const obj={ images:CONTENT.images, items:CONTENT.items, text:out, themes:THEMES };
     const fd=new FormData(); fd.append("key",key); fd.append("payload",JSON.stringify(obj));
     fetch(CONTENT_API,{method:"POST",body:fd}).then(r=>r.json()).then(j=>{
       $("savePage").disabled=false;

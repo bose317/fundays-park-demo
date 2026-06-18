@@ -325,9 +325,9 @@ const HOURS_DEFAULT = {
     {open:true, from:"9:30", to:"8:00", note:""},
     {open:true, from:"9:00", to:"8:00", note:""}
   ],
-  closures:[]
+  special:[]   // [{date, label, open, from, to}] — closed OR special hours
 };
-function cloneHours(h){ return { weekly:h.weekly.map(w=>Object.assign({},w)), closures:(h.closures||[]).map(c=>Object.assign({},c)) }; }
+function cloneHours(h){ return { weekly:h.weekly.map(w=>Object.assign({},w)), special:(h.special||h.closures||[]).map(c=>Object.assign({},c)) }; }
 let HOURS = cloneHours(HOURS_DEFAULT);
 
 const SECTIONS = [
@@ -386,7 +386,7 @@ function loadPageEditor(){
     CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
     TEXT = (j&&j.text&&typeof j.text==="object"&&!Array.isArray(j.text))?j.text:{};
     THEMES = (j&&Array.isArray(j.themes)&&j.themes.length>=3)?j.themes.map(t=>Object.assign({},t)):THEME_DEFAULTS.map(t=>Object.assign({},t));
-    HOURS = (j&&j.hours&&Array.isArray(j.hours.weekly)&&j.hours.weekly.length===7)?cloneHours({weekly:j.hours.weekly, closures:j.hours.closures||[]}):cloneHours(HOURS_DEFAULT);
+    HOURS = (j&&j.hours&&Array.isArray(j.hours.weekly)&&j.hours.weekly.length===7)?cloneHours({weekly:j.hours.weekly, special:j.hours.special||j.hours.closures||[]}):cloneHours(HOURS_DEFAULT);
     discoverDefaults(renderSections);
   }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; THEMES=THEME_DEFAULTS.map(t=>Object.assign({},t)); HOURS=cloneHours(HOURS_DEFAULT); discoverDefaults(renderSections); });
 }
@@ -504,16 +504,30 @@ function hoursEditorHTML(h){
         ${right}
       </div>
     </div>`; }).join("");
-  const closures=(h.closures||[]).map((c,i)=>`<div class="item" style="padding:10px 12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <input class="ci" type="date" style="width:172px" data-cl-i="${i}" data-cl-f="date" value="${esc(c.date||"")}">
-      <input class="ci" style="flex:1;min-width:170px" data-cl-i="${i}" data-cl-f="label" value="${esc(c.label||"")}" placeholder="假日名称，如 Canada Day（可留空）">
-      <button class="delBtn" data-cl-del="${i}">删除</button>
-    </div></div>`).join("");
+  const special=(h.special||[]).map((c,i)=>{
+    const right = c.open
+      ? `<span style="color:var(--soft);font-size:13px">营业 Open</span>
+         <input class="ci" style="width:84px" data-cl-i="${i}" data-cl-f="from" value="${esc(c.from||"")}" placeholder="9:00">
+         <span style="color:var(--soft)">–</span>
+         <input class="ci" style="width:84px" data-cl-i="${i}" data-cl-f="to" value="${esc(c.to||"")}" placeholder="1:00">`
+      : `<span style="color:var(--red);font-weight:700;font-size:13px;white-space:nowrap">整天休息 Closed</span>`;
+    return `<div class="item" style="padding:11px 13px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input class="ci" type="date" style="width:160px" data-cl-i="${i}" data-cl-f="date" value="${esc(c.date||"")}">
+        <input class="ci" style="flex:1;min-width:150px" data-cl-i="${i}" data-cl-f="label" value="${esc(c.label||"")}" placeholder="名称，如 Canada Day（可留空）">
+        <button class="delBtn" data-cl-del="${i}">删除</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px">
+        <label class="switch" style="gap:7px"><input type="checkbox" data-cl-i="${i}" data-cl-f="open" ${c.open?"checked":""} style="width:17px;height:17px;accent-color:var(--green)"> 当天营业（特殊时间）</label>
+        ${right}
+      </div>
+    </div>`;
+  }).join("");
   return `<div class="csub" style="margin-top:6px">营业时间 —— 勾选当天是否营业。营业就填开门 / 关门时间；休息可写原因。</div>
     ${rows}
-    <div class="csub" style="margin-top:16px">特殊不营业日期（节假日等）—— 这些日期会在首页日历上<b>标红</b>，并出现在「Upcoming holiday closures」里。</div>
-    ${closures || '<p class="csub">还没有特殊休息日，点下面按钮添加。</p>'}
-    <button class="addBtn" data-cl-add>＋ 添加休息日 Add closed date</button>`;
+    <div class="csub" style="margin-top:16px">特殊日期（节假日等）—— 可设为<b>整天休息</b>（首页日历标红），或勾「当天营业」填<b>特殊营业时间</b>（如营业半天 / 提前关门，日历标橙）。</div>
+    ${special || '<p class="csub">还没有特殊日期，点下面按钮添加。</p>'}
+    <button class="addBtn" data-cl-add>＋ 添加特殊日期 Add special date</button>`;
 }
 
 function doUpload(input, cb){
@@ -535,12 +549,13 @@ function doUpload(input, cb){
     if(el.hasAttribute("data-tkey")){ TEXT[el.getAttribute("data-tkey")] = el.value; return; }
     if(el.hasAttribute("data-th-i")){ const i=+el.getAttribute("data-th-i"), f=el.getAttribute("data-th-f"); if(THEMES[i]) THEMES[i][f]=el.value; return; }
     if(el.hasAttribute("data-hr-dow")){ const dow=+el.getAttribute("data-hr-dow"), f=el.getAttribute("data-hr-f"); if(f!=="open" && HOURS.weekly[dow]) HOURS.weekly[dow][f]=el.value; return; }
-    if(el.hasAttribute("data-cl-i")){ const i=+el.getAttribute("data-cl-i"), f=el.getAttribute("data-cl-f"); if(HOURS.closures[i]) HOURS.closures[i][f]=el.value; return; }
+    if(el.hasAttribute("data-cl-i")){ const i=+el.getAttribute("data-cl-i"), f=el.getAttribute("data-cl-f"); if(f!=="open" && HOURS.special[i]) HOURS.special[i][f]=el.value; return; }
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; }
   });
   p.addEventListener("change", e=>{
     const el=e.target;
     if(el.hasAttribute("data-hr-dow") && el.getAttribute("data-hr-f")==="open"){ const dow=+el.getAttribute("data-hr-dow"); if(HOURS.weekly[dow]){ HOURS.weekly[dow].open=el.checked; renderSections(); } return; }
+    if(el.hasAttribute("data-cl-i") && el.getAttribute("data-cl-f")==="open"){ const i=+el.getAttribute("data-cl-i"); if(HOURS.special[i]){ HOURS.special[i].open=el.checked; renderSections(); } return; }
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; return; }
     if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderSections(); }); return; }
     if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderSections(); } }); return; }
@@ -549,8 +564,8 @@ function doUpload(input, cb){
   p.addEventListener("click", e=>{
     const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item],[data-th-add],[data-th-del],[data-th-imgreset],[data-cl-add],[data-cl-del]");
     if(!el) return;
-    if(el.hasAttribute("data-cl-add")){ HOURS.closures.push({date:"",label:""}); renderSections(); return; }
-    if(el.hasAttribute("data-cl-del")){ const i=+el.getAttribute("data-cl-del"); HOURS.closures.splice(i,1); renderSections(); return; }
+    if(el.hasAttribute("data-cl-add")){ HOURS.special.push({date:"",label:"",open:false,from:"",to:""}); renderSections(); return; }
+    if(el.hasAttribute("data-cl-del")){ const i=+el.getAttribute("data-cl-del"); HOURS.special.splice(i,1); renderSections(); return; }
     if(el.hasAttribute("data-sec-toggle")){ const i=+el.getAttribute("data-sec-toggle"); OPEN[i]=!OPEN[i]; renderSections(); return; }
     if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderSections(); return; }
     if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderSections(); } return; }

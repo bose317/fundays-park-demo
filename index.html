@@ -269,7 +269,7 @@ const SITE_DATA = {
     social: { instagram: "@7fundayspark", facebook: "/7fundayspark", tiktok: "@7fundayspark" }
   },
   // Business hours config. weekly is indexed by JS getDay() (0=Sun … 6=Sat).
-  // closures = specific dates the park is closed (holidays etc.), "YYYY-MM-DD".
+  // special = specific dates (holidays etc.): closed, or open with custom hours.
   hoursCfg: {
     weekly: [
       { open:true,  from:"9:00", to:"6:00", note:"" },                  // 0 Sun
@@ -280,7 +280,7 @@ const SITE_DATA = {
       { open:true,  from:"9:30", to:"8:00", note:"" },                  // 5 Fri
       { open:true,  from:"9:00", to:"8:00", note:"" }                   // 6 Sat
     ],
-    closures: []
+    special: []   // [{date:"YYYY-MM-DD", label, open:bool, from, to}] — closed OR special hours
   },
   stats: [
     { num: "3,000", unit: "sq ft", label: "of indoor play" },
@@ -670,17 +670,18 @@ function parkToday(){
 
 const HoursUI = {
   cfg:null, off:0, wired:false,
-  use(c){ if(c && Array.isArray(c.weekly) && c.weekly.length===7){ this.cfg={ weekly:c.weekly, closures:Array.isArray(c.closures)?c.closures:[] }; } },
-  closureMap(){ const m={}; (this.cfg.closures||[]).forEach(c=>{ if(c&&c.date) m[String(c.date).trim()]=(c.label||"Closed"); }); return m; },
+  use(c){ if(c && Array.isArray(c.weekly) && c.weekly.length===7){ this.cfg={ weekly:c.weekly, special:Array.isArray(c.special)?c.special:(Array.isArray(c.closures)?c.closures:[]) }; } },
+  specialMap(){ const m={}; (this.cfg.special||[]).forEach(c=>{ if(c&&c.date) m[String(c.date).trim()]=c; }); return m; },
   dayState(y,m,d){
-    const cl=this.closureMap()[ymdStr(y,m,d)];
-    if(cl!=null) return { open:false, closure:true, label:cl };
+    const sp=this.specialMap()[ymdStr(y,m,d)];
+    if(sp){ if(sp.open) return { open:true, special:true, label:((sp.from||"")+" – "+(sp.to||"")), name:(sp.label||"") };
+            return { open:false, closure:true, label:(sp.label||"Closed") }; }
     const w=this.cfg.weekly[new Date(y,m,d).getDay()]||{};
     return w.open ? { open:true, label:(w.from+" – "+w.to) } : { open:false, label:(w.note||"Closed") };
   },
   todayHtml(){
     const t=parkToday(), st=this.dayState(t.y,t.m,t.d), color=st.open?"var(--green)":"var(--red)";
-    const txt=st.open ? ("Open today · "+escH(st.label)) : ("Closed today"+(st.label&&st.label!=="Closed"?(" · "+escH(st.label)):""));
+    const txt=st.open ? ("Open today · "+escH(st.label)+(st.special?(" · "+escH(st.name||"Holiday hours")):"")) : ("Closed today"+(st.label&&st.label!=="Closed"?(" · "+escH(st.label)):""));
     return `<div style="display:flex;align-items:center;gap:9px;font-size:16px"><span style="width:11px;height:11px;border-radius:50%;background:${color};flex-shrink:0;box-shadow:0 0 0 4px color-mix(in srgb,${color} 20%,transparent)"></span><strong style="font-family:var(--font-display);color:${color}">${txt}</strong></div>`;
   },
   weekHtml(){
@@ -696,9 +697,9 @@ const HoursUI = {
     const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
     let cells=""; for(let i=0;i<first;i++) cells+="<div></div>";
     for(let d=1;d<=days;d++){ const st=this.dayState(y,m,d), isToday=(y===t.y&&m===t.m&&d===t.d);
-      const bg=st.closure?"color-mix(in srgb,var(--red) 16%,transparent)":(st.open?"transparent":"#eef1f6");
+      const bg=st.special?"color-mix(in srgb,var(--orange) 22%,transparent)":st.closure?"color-mix(in srgb,var(--red) 16%,transparent)":(st.open?"transparent":"#eef1f6");
       const col=st.open?"var(--ink)":"var(--red)";
-      const ttl=st.open?("Open "+st.label):("Closed"+(st.closure?": "+st.label:""));
+      const ttl=st.special?("Special hours "+st.label+(st.name?" · "+st.name:"")):st.open?("Open "+st.label):("Closed"+(st.closure?": "+st.label:""));
       cells+=`<div title="${escH(ttl)}" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:13px;font-weight:700;background:${bg};color:${col}${isToday?";box-shadow:0 0 0 2px var(--accent) inset":""}${!st.open?";text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--red) 55%,transparent)":""}">${d}</div>`;
     }
     const prevDis=this.off<=0;
@@ -711,11 +712,11 @@ const HoursUI = {
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:11px;color:var(--ink-soft);font-weight:800;margin-bottom:5px">${WD_SHORT.map(w=>`<div>${w}</div>`).join("")}</div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cells}</div>`;
   },
-  closuresHtml(){
+  specialHtml(){
     const t=parkToday(), todayStr=ymdStr(t.y,t.m,t.d);
-    const up=(this.cfg.closures||[]).filter(c=>c&&c.date&&String(c.date).trim()>=todayStr).sort((a,b)=>String(a.date)<String(b.date)?-1:1).slice(0,6);
+    const up=(this.cfg.special||[]).filter(c=>c&&c.date&&String(c.date).trim()>=todayStr).sort((a,b)=>String(a.date)<String(b.date)?-1:1).slice(0,6);
     if(!up.length) return "";
-    return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:7px">📅 Upcoming holiday closures</div>${up.map(c=>{ const p=/(\d{4})-(\d{2})-(\d{2})/.exec(String(c.date)); const lbl=p?(MONTHS[+p[2]-1]+" "+(+p[3])):c.date; return `<div style="display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:3px 0"><span style="color:var(--red);font-weight:700">${escH(lbl)}</span><span style="color:var(--ink-soft)">${escH(c.label||"Closed")}</span></div>`; }).join("")}</div>`;
+    return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:7px">📅 Upcoming special days</div>${up.map(c=>{ const p=/(\d{4})-(\d{2})-(\d{2})/.exec(String(c.date)); const lbl=p?(MONTHS[+p[2]-1]+" "+(+p[3])):c.date; const open=!!c.open; const right=open?((c.from||"")+" – "+(c.to||"")):"Closed"; return `<div style="display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:3px 0"><span style="color:${open?'var(--orange)':'var(--red)'};font-weight:700">${escH(lbl)}</span><span style="color:var(--ink-soft)">${escH(c.label||(open?"Special hours":"Closed"))} · ${escH(right)}</span></div>`; }).join("")}</div>`;
   },
   footerHtml(){
     const order=[1,2,3,4,5,6,0];
@@ -726,7 +727,7 @@ const HoursUI = {
     if(!this.cfg) this.cfg=D.hoursCfg;
     const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
     set("hours-today",this.todayHtml()); set("hours-week",this.weekHtml());
-    set("hours-cal",this.calHtml()); set("hours-closures",this.closuresHtml());
+    set("hours-cal",this.calHtml()); set("hours-closures",this.specialHtml());
     set("footer-hours",this.footerHtml());
   },
   boot(){
@@ -749,9 +750,10 @@ function Visit(){
           </div>
           <div class="card" style="padding:18px 20px;margin-bottom:22px">
             <div id="hours-cal"></div>
-            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:13px;font-size:12px;color:var(--ink-soft)">
-              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:#eef1f6;display:inline-block"></span>Closed day</span>
-              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:color-mix(in srgb,var(--red) 22%,transparent);display:inline-block"></span>Holiday</span>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:13px;font-size:12px;color:var(--ink-soft)">
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:#eef1f6;display:inline-block"></span>Closed</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:color-mix(in srgb,var(--red) 22%,transparent);display:inline-block"></span>Holiday closed</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:color-mix(in srgb,var(--orange) 30%,transparent);display:inline-block"></span>Special hours</span>
               <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;box-shadow:0 0 0 2px var(--accent) inset;display:inline-block"></span>Today</span>
             </div>
             <div id="hours-closures"></div>

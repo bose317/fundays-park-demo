@@ -90,6 +90,14 @@
   .saveBtn[disabled]{ opacity:.55; cursor:not-allowed; }
   .addBtn{ background:color-mix(in srgb,var(--sky) 14%,transparent); color:var(--sky); padding:11px 18px; border-radius:11px; font-family:'Baloo 2'; font-weight:700; font-size:14.5px; }
   .delBtn{ background:color-mix(in srgb,var(--red) 12%,transparent); color:var(--red); padding:8px 14px; border-radius:10px; font-family:'Baloo 2'; font-weight:700; font-size:13px; }
+  /* section-based page editor */
+  .seccard{ background:var(--surface); border-radius:16px; box-shadow:0 10px 26px -20px rgba(20,44,88,.45); margin-bottom:14px; overflow:hidden; border:1px solid var(--line); }
+  .sechead{ display:flex; align-items:center; gap:16px; padding:14px 18px; cursor:pointer; user-select:none; }
+  .sechead:hover{ background:#fafcff; }
+  .secthumb{ width:140px; height:84px; object-fit:cover; object-position:top; border-radius:10px; border:1px solid var(--line); flex-shrink:0; background:#eef1f6; box-shadow:0 4px 10px -6px rgba(20,44,88,.4); }
+  .sectitle{ font-family:'Baloo 2'; font-weight:800; font-size:17px; color:var(--navy); }
+  .seccaret{ color:var(--soft); font-size:20px; flex-shrink:0; }
+  .secbody{ padding:8px 20px 22px; border-top:1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -126,8 +134,7 @@
     <div class="tabs">
       <button class="tab on" data-tab="bookings" id="tabBookings">🎉 Bookings</button>
       <button class="tab" data-tab="waivers" id="tabWaivers">✍️ Waivers</button>
-      <button class="tab" data-tab="content" id="tabContent">📣 Content</button>
-      <button class="tab" data-tab="text" id="tabText">📝 Text</button>
+      <button class="tab" data-tab="page" id="tabPage">📝 编辑页面 Page</button>
     </div>
     <div class="toolbar" id="toolbar">
       <input class="search" id="search" placeholder="Check-in: type a child or parent name…" />
@@ -136,35 +143,13 @@
     <div id="verdict"></div>
     <div id="tableArea"></div>
 
-    <!-- CONTENT EDITOR -->
-    <div id="contentPanel" class="hidden">
-      <div class="cpanel">
-        <h2>Page images</h2>
-        <div class="csub">Replace the homepage photos. Best results: landscape JPG/PNG/WEBP, around 1200×900px, under 6&nbsp;MB. Leave a slot empty to keep the current default illustration. Changes go live when you click <b>Save &amp; publish</b>.</div>
-        <div class="slotgrid" id="imageSlots"></div>
-      </div>
-      <div class="cpanel">
-        <h2>News &amp; Promotions</h2>
-        <div class="csub">These appear in the “News &amp; Promotions” block near the top of the homepage. Untick “Show on site” to hide an item without deleting it.</div>
-        <div id="itemsList"></div>
-        <button class="addBtn" id="addItem">＋ Add news / promotion</button>
-      </div>
+    <!-- PAGE EDITOR (by section) -->
+    <div id="pagePanel" class="hidden">
+      <div class="csub" style="margin-bottom:14px;font-size:13.5px">按版块编辑 —— 每个版块<b>左边的小截图</b>就是它在首页上的位置。点版块标题展开 / 收起，里面可以改这一块的<b>图片</b>和<b>文字</b>。改完点最下面<b>「保存并发布」</b>。</div>
+      <div id="sectionList"><p class="csub">Loading…</p></div>
       <div class="savebar">
-        <button class="saveBtn" id="saveContent">✓ Save &amp; publish</button>
-        <span class="count" id="contentStatus"></span>
-      </div>
-    </div>
-
-    <!-- TEXT EDITOR -->
-    <div id="textPanel" class="hidden">
-      <div class="cpanel">
-        <h2>Page text</h2>
-        <div class="csub">Edit the wording shown on the homepage (top to bottom). Change a box to override it; clear a box to reset it to the default. Click <b>Save &amp; publish</b> to go live.</div>
-        <div id="textFields"><p class="csub">Loading…</p></div>
-      </div>
-      <div class="savebar">
-        <button class="saveBtn" id="saveText">✓ Save &amp; publish</button>
-        <span class="count" id="textStatus"></span>
+        <button class="saveBtn" id="savePage">✓ 保存并发布 Save &amp; publish</button>
+        <span class="count" id="pageStatus"></span>
       </div>
     </div>
   </div>
@@ -247,16 +232,13 @@ function setTab(t){
   activeTab = t;
   $("tabBookings").classList.toggle("on", t==="bookings");
   $("tabWaivers").classList.toggle("on", t==="waivers");
-  $("tabContent").classList.toggle("on", t==="content");
-  $("tabText").classList.toggle("on", t==="text");
-  const isContent = t==="content", isText = t==="text", isTable = (!isContent && !isText);
+  $("tabPage").classList.toggle("on", t==="page");
+  const isPage = t==="page", isTable = !isPage;
   $("toolbar").classList.toggle("hidden", !isTable);
   $("verdict").classList.toggle("hidden", !isTable);
   $("tableArea").classList.toggle("hidden", !isTable);
-  $("contentPanel").classList.toggle("hidden", !isContent);
-  $("textPanel").classList.toggle("hidden", !isText);
-  if(isContent) loadContentAdmin();
-  else if(isText) loadTextEditor();
+  $("pagePanel").classList.toggle("hidden", !isPage);
+  if(isPage) loadPageEditor();
   else renderTable();
 }
 
@@ -296,42 +278,109 @@ document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () =>
 $("refreshBtn").addEventListener("click", () => { const k = sessionStorage.getItem("fd_admin_key"); if(k){ $("refreshBtn").textContent="↻ …"; load(k, ()=>{}); setTimeout(()=>$("refreshBtn").textContent="↻ Refresh",1200); } });
 $("logoutBtn").addEventListener("click", () => { sessionStorage.removeItem("fd_admin_key"); $("dash").classList.add("hidden"); $("login").classList.remove("hidden"); $("pass").value=""; });
 
-/* ===== Content editor (page images + news/promos) — same-origin PHP API ===== */
+/* ===== Page editor (organised by homepage section) — same-origin PHP API ===== */
 const CONTENT_API = "api/content.php";
 const UPLOAD_API  = "api/upload.php";
 let CONTENT = { images:{}, items:[] };
-const IMG_SLOTS = [
-  {key:"hero",     label:"Hero (top) image"},
-  {key:"gallery0", label:"Gallery photo 1"},
-  {key:"gallery1", label:"Gallery photo 2"},
-  {key:"gallery2", label:"Gallery photo 3"},
-  {key:"attr0", label:"Eight Worlds 1 · Grain Elevator Climber"},
-  {key:"attr1", label:"Eight Worlds 2 · Speedway Slides"},
-  {key:"attr2", label:"Eight Worlds 3 · Wheatfield Ball Ocean"},
-  {key:"attr3", label:"Eight Worlds 4 · Little Sprouts Zone"},
-  {key:"attr4", label:"Eight Worlds 5 · Rocket Trampoline Bay"},
-  {key:"attr5", label:"Eight Worlds 6 · Games Town"},
-  {key:"attr6", label:"Eight Worlds 7 · Whistle Stop Café"},
-  {key:"attr7", label:"Eight Worlds 8 · Quiet Sensory Room"}
+let TEXT = {}, TEXT_DEFAULTS = {}, TEXT_ORDER = [];
+let OPEN = { 0:true };   // which section cards are expanded
+
+const ATTR_LABELS = ["Grain Elevator Climber","Speedway Slides","Wheatfield Ball Ocean","Little Sprouts Zone","Rocket Trampoline Bay","Games Town","Whistle Stop Café","Quiet Sensory Room"];
+const SECTIONS = [
+  { id:"hero", title:"① 顶部主视觉 Hero", thumb:"hero.jpg",
+    images:[{key:"hero", label:"主视觉大图"}],
+    text:k=>k.indexOf("hero.")===0 || k.indexOf("stat.")===0 },
+  { id:"news", title:"② 新闻 / 促销 News & Promotions", thumb:"news.jpg",
+    images:[], promos:true, text:k=>false },
+  { id:"attractions", title:"③ 八大主题 Eight Worlds", thumb:"attractions.jpg",
+    images:ATTR_LABELS.map((l,i)=>({key:"attr"+i, label:"World "+(i+1)+" · "+l})),
+    text:k=>k.indexOf("sec.attractions.")===0 || k.indexOf("attr.title.")===0 || k.indexOf("attr.desc.")===0 },
+  { id:"pricing", title:"④ 价格 Pricing", thumb:"pricing.jpg",
+    images:[], text:k=>k.indexOf("sec.pricing.")===0 || k.indexOf("price.")===0 || k.indexOf("adm.")===0 || k.indexOf("pass.")===0 || k.indexOf("arc.")===0 },
+  { id:"packages", title:"⑤ 派对 / 预订 Birthdays & Parties", thumb:"packages.jpg",
+    images:[], text:k=>k.indexOf("sec.packages.")===0 || k.indexOf("pkg.")===0 },
+  { id:"visit", title:"⑥ 营业时间 / 位置 / 联系 Hours & Location", thumb:"visit.jpg",
+    images:[], text:k=>k.indexOf("sec.visit.")===0 || k.indexOf("hours.")===0 || k.indexOf("brand.")===0 },
+  { id:"about", title:"⑦ 关于我们 About", thumb:"about.jpg",
+    images:[], text:k=>k.indexOf("sec.about.")===0 || k.indexOf("about.")===0 },
+  { id:"gallery", title:"⑧ 画廊 Gallery", thumb:"gallery.jpg",
+    images:[{key:"gallery0",label:"照片 1"},{key:"gallery1",label:"照片 2"},{key:"gallery2",label:"照片 3"}],
+    text:k=>k.indexOf("sec.gallery.")===0 },
+  { id:"faq", title:"⑨ 常见问题 / 注意事项 FAQ", thumb:"faq.jpg",
+    images:[], text:k=>k.indexOf("sec.faq.")===0 || k.indexOf("faq.")===0 || k.indexOf("sec.goodtoknow.")===0 || k.indexOf("gtk.")===0 },
+  { id:"waiver", title:"⑩ 免责声明 Waiver", thumb:"waiver.jpg",
+    images:[], text:k=>k.indexOf("sec.waiver.")===0 || k.indexOf("waiver.")===0 },
+  { id:"footer", title:"⑪ 页脚 Footer", thumb:"footer.jpg",
+    images:[], text:k=>k.indexOf("footer.")===0 }
 ];
 
-function loadContentAdmin(){
-  $("contentStatus").textContent = "Loading…";
-  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-    CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
-    renderContentEditor(); $("contentStatus").textContent="";
-  }).catch(()=>{ CONTENT={images:{},items:[]}; renderContentEditor(); $("contentStatus").textContent="(couldn't load — starting fresh)"; });
+function humanizeKey(k){
+  const m={eyebrow:"小标签",title:"标题",lead:"引导语",desc:"描述",note:"说明",day:"星期",time:"时间",who:"对象",sub:"副说明",wd:"平日价",we:"周末价",label:"名称",detail:"详情",name:"名称",blurb:"简介",kids:"人数",dur:"时长",price:"价格",deposit:"订金说明",num:"数字",unit:"单位",address:"地址",phone:"电话",email:"邮箱",disclaimer:"免责声明",tagline:"标语",inc:"包含项",tlabel:"档位名",tprice:"档位价",q:"问题",a:"回答",t:"标题",d:"说明",cellA:"数据",cellB:"数据说明",h:"表头",body:"正文"};
+  const p=k.split("."), L=x=>m[x]||x, N=x=>(parseInt(x,10)+1);
+  if(p[0]==="sec")   return "版块"+L(p[2]);
+  if(p[0]==="hero")  return "Hero·"+L(p[1]);
+  if(p[0]==="stat")  return "数据"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="attr")  return "主题"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="hours") return "营业时间"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="brand") return L(p[1]);
+  if(p[0]==="adm"){ if(p[1]==="note")return "入场说明"; if(p[1]==="h")return "表头·"+L(p[2]); return "入场第"+N(p[2])+"行·"+L(p[1]); }
+  if(p[0]==="price") return "小标题";
+  if(p[0]==="pass")  return "会员卡"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="arc")   return "代币/零食"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="pkg"){ if(p[1]==="deposit")return "订金说明"; if(p[1]==="custom")return "定制派对·"+L(p[2]); if(p[1]==="inc")return "套餐"+N(p[2])+"·包含项"+N(p[3]); return "套餐"+N(p[2])+"·"+L(p[1]); }
+  if(p[0]==="faq")   return "FAQ"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="gtk")   return "注意事项"+N(p[2])+"·"+L(p[1]);
+  if(p[0]==="about"){ if(p[1]==="p1")return "段落1"; if(p[1]==="p2")return "段落2"; return "数据"+N(p[2])+"·"+L(p[1]); }
+  if(p[0]==="footer")return "页脚标语";
+  if(p[0]==="waiver")return "Waiver 说明";
+  return k;
 }
 
-function renderContentEditor(){
-  $("imageSlots").innerHTML = IMG_SLOTS.map(s=>{
-    const url = CONTENT.images[s.key];
-    const thumb = url ? `<img class="thumb" src="${esc(url)}" alt="" />` : `<div class="thumb none">Using default</div>`;
-    return `<div class="slot"><div class="lbl">${esc(s.label)}</div>${thumb}
-      <label class="mini up">Upload<input type="file" accept="image/*" data-img-slot="${esc(s.key)}" style="display:none"></label>
-      ${url?`<button class="mini ghost" data-img-reset="${esc(s.key)}">Reset</button>`:''}</div>`;
+function loadPageEditor(){
+  $("pageStatus").textContent = "Loading…";
+  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+    CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
+    TEXT = (j&&j.text&&typeof j.text==="object"&&!Array.isArray(j.text))?j.text:{};
+    discoverDefaults(renderSections);
+  }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; discoverDefaults(renderSections); });
+}
+
+function renderSections(){
+  $("pageStatus").textContent = "";
+  const used = {};
+  $("sectionList").innerHTML = SECTIONS.map((sec,si)=>{
+    const imgs = sec.images.map(s=>{
+      const url = CONTENT.images[s.key];
+      const thumb = url ? `<img class="thumb" src="${esc(url)}" alt="">` : `<div class="thumb none">默认 default</div>`;
+      return `<div class="slot"><div class="lbl">${esc(s.label)}</div>${thumb}
+        <label class="mini up">上传 Upload<input type="file" accept="image/*" data-img-slot="${esc(s.key)}" style="display:none"></label>
+        ${url?`<button class="mini ghost" data-img-reset="${esc(s.key)}">恢复默认</button>`:''}</div>`;
+    }).join("");
+    const keys = TEXT_ORDER.filter(k=>{ if(used[k]) return false; if(sec.text(k)){ used[k]=1; return true; } return false; });
+    const fields = keys.map(k=>{
+      const def = TEXT_DEFAULTS[k]||""; const cur = (TEXT[k]!=null)?TEXT[k]:def;
+      const f = (def.length>56)
+        ? `<textarea class="ci" data-tkey="${esc(k)}" rows="2">${esc(cur)}</textarea>`
+        : `<input class="ci" data-tkey="${esc(k)}" value="${esc(cur)}">`;
+      return `<label class="fld2" style="display:block;margin-bottom:11px"><span>${esc(humanizeKey(k))}</span>${f}</label>`;
+    }).join("");
+    const promos = sec.promos
+      ? `<div>${CONTENT.items.length?CONTENT.items.map((it,i)=>itemHtml(it,i)).join(""):'<p class="csub">还没有促销 / 新闻，点下面按钮添加。</p>'}</div><button class="addBtn" data-add-item>＋ 添加促销 / 新闻</button>`
+      : "";
+    const hasContent = sec.images.length || sec.promos || fields;
+    const body = `<div class="secbody"${OPEN[si]?'':' style="display:none"'}>
+      ${sec.images.length?`<div class="csub">图片（点「上传」换图，留空＝用默认插画）</div><div class="slotgrid" style="margin-bottom:12px">${imgs}</div>`:''}
+      ${promos}
+      ${fields?`<div class="csub" style="margin-top:6px">文字（改框＝覆盖，清空＝恢复默认）</div>${fields}`:(hasContent?'':'<p class="csub">这一版块暂无可编辑内容。</p>')}
+    </div>`;
+    return `<div class="seccard">
+      <div class="sechead" data-sec-toggle="${si}">
+        <img class="secthumb" src="assets/admin-thumbs/${sec.thumb}" alt="" onerror="this.style.visibility='hidden'">
+        <div style="flex:1"><div class="sectitle">${esc(sec.title)}</div><div class="csub" style="margin:3px 0 0">← 左边小图＝首页上的这一部分</div></div>
+        <span class="seccaret">${OPEN[si]?'▾':'▸'}</span>
+      </div>${body}
+    </div>`;
   }).join("");
-  $("itemsList").innerHTML = CONTENT.items.length ? CONTENT.items.map((it,i)=>itemHtml(it,i)).join("") : '<p class="csub">No items yet — click “Add news / promotion” below.</p>';
 }
 
 function itemHtml(it,i){
@@ -363,80 +412,53 @@ function itemHtml(it,i){
 
 function doUpload(input, cb){
   const file = input.files && input.files[0]; if(!file){ return; }
-  const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
-  $("contentStatus").textContent = "Uploading image…";
+  const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
+  $("pageStatus").textContent = "上传图片中…";
   const fd = new FormData(); fd.append("key", key); fd.append("image", file);
   fetch(UPLOAD_API, {method:"POST", body:fd}).then(r=>r.json()).then(j=>{
-    if(j && j.ok){ $("contentStatus").textContent="Image uploaded ✓  (click Save & publish to go live)"; cb(j.url); }
-    else { $("contentStatus").textContent=""; alert("Upload failed: "+((j&&j.error)||"unknown error")); }
-  }).catch(()=>{ $("contentStatus").textContent=""; alert("Upload failed (network)."); });
+    if(j && j.ok){ $("pageStatus").textContent="图片已上传 ✓ （记得点「保存并发布」）"; cb(j.url); }
+    else { $("pageStatus").textContent=""; alert("上传失败："+((j&&j.error)||"未知错误")); }
+  }).catch(()=>{ $("pageStatus").textContent=""; alert("上传失败（网络问题）。"); });
   input.value = "";
 }
 
-(function wireContent(){
-  const p = $("contentPanel");
-  const upd = el => { if(!el.hasAttribute("data-field")) return; const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(!CONTENT.items[i]) return; CONTENT.items[i][f] = (el.type==="checkbox") ? el.checked : el.value; };
-  p.addEventListener("input", e=>upd(e.target));
+(function wirePage(){
+  const p = $("pagePanel");
+  p.addEventListener("input", e=>{
+    const el=e.target;
+    if(el.hasAttribute("data-tkey")){ TEXT[el.getAttribute("data-tkey")] = el.value; return; }
+    if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; }
+  });
   p.addEventListener("change", e=>{
     const el=e.target;
-    if(el.hasAttribute("data-field")){ upd(el); return; }
-    if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderContentEditor(); }); return; }
-    if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderContentEditor(); } }); return; }
+    if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; return; }
+    if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderSections(); }); return; }
+    if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderSections(); } }); return; }
   });
   p.addEventListener("click", e=>{
-    const el=e.target;
-    if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderContentEditor(); return; }
-    if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderContentEditor(); } return; }
-    if(el.hasAttribute("data-item-del")){ const i=+el.getAttribute("data-item-del"); if(confirm("Delete this item?")){ CONTENT.items.splice(i,1); renderContentEditor(); } return; }
+    const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item]");
+    if(!el) return;
+    if(el.hasAttribute("data-sec-toggle")){ const i=+el.getAttribute("data-sec-toggle"); OPEN[i]=!OPEN[i]; renderSections(); return; }
+    if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderSections(); return; }
+    if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderSections(); } return; }
+    if(el.hasAttribute("data-item-del")){ const i=+el.getAttribute("data-item-del"); if(confirm("删除这一条？")){ CONTENT.items.splice(i,1); renderSections(); } return; }
+    if(el.hasAttribute("data-add-item")){ CONTENT.items.push({type:"promo",title:"",body:"",badge:"",date:"",link:"",image:"",active:true}); renderSections(); return; }
   });
-  $("addItem").addEventListener("click", ()=>{ CONTENT.items.push({type:"promo",title:"",body:"",badge:"",date:"",link:"",image:"",active:true}); renderContentEditor(); });
-  $("saveContent").addEventListener("click", ()=>{
-    saveAll({images:CONTENT.images, items:CONTENT.items}, $("saveContent"), $("contentStatus"));
+  $("savePage").addEventListener("click", ()=>{
+    const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
+    $("savePage").disabled=true; $("pageStatus").textContent="保存中…";
+    const out={}; p.querySelectorAll("[data-tkey]").forEach(el=>{ const k=el.getAttribute("data-tkey"), v=el.value, def=TEXT_DEFAULTS[k]||""; if(v.trim()!=="" && v.trim()!==def.trim()) out[k]=v; });
+    const obj={ images:CONTENT.images, items:CONTENT.items, text:out };
+    const fd=new FormData(); fd.append("key",key); fd.append("payload",JSON.stringify(obj));
+    fetch(CONTENT_API,{method:"POST",body:fd}).then(r=>r.json()).then(j=>{
+      $("savePage").disabled=false;
+      if(j&&j.ok){ TEXT=out; $("pageStatus").textContent="已保存并发布 ✓"; }
+      else { $("pageStatus").textContent=""; alert("保存失败："+((j&&j.error)||"未知错误")); }
+    }).catch(()=>{ $("savePage").disabled=false; $("pageStatus").textContent=""; alert("保存失败（网络问题）。"); });
   });
 })();
 
-/* Save helper — merges the given parts with whatever is already stored so one tab never wipes another's data */
-function saveAll(partial, btn, statusEl){
-  const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("Please sign in again."); return; }
-  btn.disabled = true; statusEl.textContent = "Saving…";
-  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():{}).then(cur=>{
-    cur = cur || {};
-    const obj = {
-      images: ('images' in partial) ? partial.images : ((cur.images && !Array.isArray(cur.images)) ? cur.images : {}),
-      items:  ('items'  in partial) ? partial.items  : (Array.isArray(cur.items) ? cur.items : []),
-      text:   ('text'   in partial) ? partial.text   : ((cur.text && !Array.isArray(cur.text)) ? cur.text : {})
-    };
-    const fd = new FormData(); fd.append("key", key); fd.append("payload", JSON.stringify(obj));
-    return fetch(CONTENT_API, {method:"POST", body:fd}).then(r=>r.json());
-  }).then(j=>{
-    btn.disabled = false;
-    if(j && j.ok){ statusEl.textContent = "Saved & published ✓"; }
-    else { statusEl.textContent=""; alert("Save failed: "+((j&&j.error)||"unknown error")); }
-  }).catch(()=>{ btn.disabled=false; statusEl.textContent=""; alert("Save failed (network)."); });
-}
-
-/* ===== Page-text editor — auto-discovers editable strings from the live homepage ===== */
-let TEXT = {};          // saved overrides {key:value}
-let TEXT_DEFAULTS = {}; // {key:defaultText} discovered from the homepage (raw mode)
-let TEXT_ORDER = [];    // keys in page order
-
-function humanizeKey(k){
-  const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
-  const p = k.split(".");
-  if(p[0]==="sec")  return cap(p[1])+" section · "+p[2];
-  if(p[0]==="hero") return "Hero · "+p[1];
-  if(p[0]==="attr") return "Attraction "+(parseInt(p[2],10)+1)+" · "+p[1];
-  return k;
-}
-
-function loadTextEditor(){
-  $("textStatus").textContent = "Loading…";
-  fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-    TEXT = (j && j.text && typeof j.text==="object" && !Array.isArray(j.text)) ? j.text : {};
-    discoverDefaults(renderTextFields);
-  }).catch(()=>{ TEXT={}; discoverDefaults(renderTextFields); });
-}
-
+/* discover each editable string's default text from the live homepage (raw mode, no overrides) */
 function discoverDefaults(cb){
   let frame = document.getElementById("rawFrame");
   if(frame) frame.remove();
@@ -449,44 +471,17 @@ function discoverDefaults(cb){
     if(done) return;
     try{
       const els = frame.contentDocument.querySelectorAll("[data-edit]");
-      if(!els.length) return;          // not rendered yet — wait for next try
+      if(!els.length) return;
       done = true;
       TEXT_DEFAULTS = {}; TEXT_ORDER = [];
-      els.forEach(el => {
-        const k = el.getAttribute("data-edit");
-        if(!(k in TEXT_DEFAULTS)){ TEXT_DEFAULTS[k] = el.textContent.trim().replace(/\s+/g," "); TEXT_ORDER.push(k); }
-      });
+      els.forEach(el => { const k = el.getAttribute("data-edit"); if(!(k in TEXT_DEFAULTS)){ TEXT_DEFAULTS[k] = el.textContent.trim().replace(/\s+/g," "); TEXT_ORDER.push(k); } });
       frame.remove(); cb();
     }catch(e){}
   };
-  frame.onload = () => { setTimeout(grab, 350); setTimeout(grab, 1000); setTimeout(grab, 2200); };
+  frame.onload = () => { setTimeout(grab,350); setTimeout(grab,1000); setTimeout(grab,2200); };
   document.body.appendChild(frame);
-  setTimeout(() => { if(!done){ done = true; cb(); } }, 5000);
+  setTimeout(() => { if(!done){ done=true; cb(); } }, 5000);
 }
-
-function renderTextFields(){
-  $("textStatus").textContent = "";
-  if(!TEXT_ORDER.length){ $("textFields").innerHTML = '<p class="csub">Couldn\'t load the page text — please click '+'↻ Refresh'+' and reopen this tab.</p>'; return; }
-  $("textFields").innerHTML = TEXT_ORDER.map(k=>{
-    const def = TEXT_DEFAULTS[k] || "";
-    const cur = (TEXT[k]!=null) ? TEXT[k] : def;
-    const field = (def.length>56)
-      ? `<textarea class="ci" data-tkey="${esc(k)}" rows="2">${esc(cur)}</textarea>`
-      : `<input class="ci" data-tkey="${esc(k)}" value="${esc(cur)}" />`;
-    return `<label class="fld2" style="display:block;margin-bottom:14px"><span>${esc(humanizeKey(k))}</span>${field}</label>`;
-  }).join("");
-}
-
-$("saveText").addEventListener("click", ()=>{
-  const out = {};
-  $("textFields").querySelectorAll("[data-tkey]").forEach(el=>{
-    const k = el.getAttribute("data-tkey"), v = el.value;
-    const def = TEXT_DEFAULTS[k] || "";
-    if(v.trim() !== "" && v.trim() !== def.trim()) out[k] = v;   // only store real overrides
-  });
-  TEXT = out;
-  saveAll({text: out}, $("saveText"), $("textStatus"));
-});
 
 // auto-login if session key present
 

@@ -292,7 +292,7 @@ const IMG_SLOTS = [
 function loadContentAdmin(){
   $("contentStatus").textContent = "Loading…";
   fetch(CONTENT_API, {cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-    CONTENT = { images:(j&&j.images&&typeof j.images==="object")?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
+    CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
     renderContentEditor(); $("contentStatus").textContent="";
   }).catch(()=>{ CONTENT={images:{},items:[]}; renderContentEditor(); $("contentStatus").textContent="(couldn't load — starting fresh)"; });
 }

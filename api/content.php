@@ -38,7 +38,7 @@ if ($method === 'POST') {
     http_response_code(400);
     out(['ok' => false, 'error' => 'bad payload']);
   }
-  $images = (isset($j['images']) && is_array($j['images'])) ? $j['images'] : new stdClass();
+  $images = (isset($j['images']) && is_array($j['images']) && count($j['images'])) ? $j['images'] : new stdClass();
   $items  = (isset($j['items'])  && is_array($j['items']))  ? array_slice($j['items'], 0, 50) : [];
   $clean = ['updated' => date('c'), 'images' => $images, 'items' => $items];
   if (!is_dir($CMS)) @mkdir($CMS, 0700, true);

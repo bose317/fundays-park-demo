@@ -268,14 +268,20 @@ const SITE_DATA = {
     legal: "FunFusion Greenfairway Ventures Ltd.",
     social: { instagram: "@7fundayspark", facebook: "/7fundayspark", tiktok: "@7fundayspark" }
   },
-  hours: [
-    { day: "Monday", time: "Closed · Group bookings only" },
-    { day: "Tue – Thu", time: "9:30 – 6:00" },
-    { day: "Friday", time: "9:30 – 8:00" },
-    { day: "Saturday", time: "9:00 – 8:00" },
-    { day: "Sunday", time: "9:00 – 6:00" },
-    { day: "Holidays", time: "9:00 – 6:00" }
-  ],
+  // Business hours config. weekly is indexed by JS getDay() (0=Sun … 6=Sat).
+  // closures = specific dates the park is closed (holidays etc.), "YYYY-MM-DD".
+  hoursCfg: {
+    weekly: [
+      { open:true,  from:"9:00", to:"6:00", note:"" },                  // 0 Sun
+      { open:false, from:"",     to:"",     note:"Group bookings only" },// 1 Mon
+      { open:true,  from:"9:30", to:"6:00", note:"" },                  // 2 Tue
+      { open:true,  from:"9:30", to:"6:00", note:"" },                  // 3 Wed
+      { open:true,  from:"9:30", to:"6:00", note:"" },                  // 4 Thu
+      { open:true,  from:"9:30", to:"8:00", note:"" },                  // 5 Fri
+      { open:true,  from:"9:00", to:"8:00", note:"" }                   // 6 Sat
+    ],
+    closures: []
+  },
   stats: [
     { num: "3,000", unit: "sq ft", label: "of indoor play" },
     { num: "1", unit: "level", label: "everything in view" },
@@ -347,7 +353,7 @@ const SITE_DATA = {
     { q:"Can I bring my own cake?", a:"Absolutely. Per health guidelines, outside cake must be store-bought and arrive sealed. We can't store ice-cream cakes that need a freezer." },
     { q:"Not sure on numbers — can I add guests later?", a:"No problem. Packages have a minimum headcount; a heads-up on extra guests is appreciated but not required — bring the whole town, we'll figure it out." },
     { q:"How early should we arrive?", a:"Aim for 20 minutes before your party. Just tell the front desk you're here for the Par-tay!" },
-    { q:"Is a waiver needed?", a:"Yes. Every child who plays needs a one-time waiver signed by a parent/guardian. Sign online to skip the line." },
+    { q:"Is a waiver needed?", a:"Yes. Every child who plays needs a waiver signed by a parent/guardian — valid for the day of the visit, so it's signed again on each visit. Sign online to skip the line." },
     { q:"What's the cancellation policy?", a:"The $80 deposit is non-refundable, and cancellations within 72 hours of your party are charged in full. Need to adjust details? Call our party planners at (306) 555-7373 and we'll do our best to help." },
     { q:"Are socks required?", a:"Yes — grip socks are required in all play areas, adults included. Forgot yours? Grab a pair at the front desk for $3." }
   ],
@@ -647,18 +653,108 @@ function Packages(){
   </section>`;
 }
 
+/* ---- Business hours + opening calendar (config-driven, editable in admin) ---- */
+const WD_LONG  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WD_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS   = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function escH(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function pad2(n){ return (n<10?"0":"")+n; }
+function ymdStr(y,m,d){ return y+"-"+pad2(m+1)+"-"+pad2(d); }
+// "today" in the park's timezone (Langham, SK = America/Regina, no DST)
+function parkToday(){
+  let y,m,d;
+  try{ const p=/(\d{4})-(\d{2})-(\d{2})/.exec(new Date().toLocaleDateString("en-CA",{timeZone:"America/Regina"})); y=+p[1]; m=+p[2]-1; d=+p[3]; }
+  catch(e){ const t=new Date(); y=t.getFullYear(); m=t.getMonth(); d=t.getDate(); }
+  return { y, m, d, dow:new Date(y,m,d).getDay() };
+}
+
+const HoursUI = {
+  cfg:null, off:0, wired:false,
+  use(c){ if(c && Array.isArray(c.weekly) && c.weekly.length===7){ this.cfg={ weekly:c.weekly, closures:Array.isArray(c.closures)?c.closures:[] }; } },
+  closureMap(){ const m={}; (this.cfg.closures||[]).forEach(c=>{ if(c&&c.date) m[String(c.date).trim()]=(c.label||"Closed"); }); return m; },
+  dayState(y,m,d){
+    const cl=this.closureMap()[ymdStr(y,m,d)];
+    if(cl!=null) return { open:false, closure:true, label:cl };
+    const w=this.cfg.weekly[new Date(y,m,d).getDay()]||{};
+    return w.open ? { open:true, label:(w.from+" – "+w.to) } : { open:false, label:(w.note||"Closed") };
+  },
+  todayHtml(){
+    const t=parkToday(), st=this.dayState(t.y,t.m,t.d), color=st.open?"var(--green)":"var(--red)";
+    const txt=st.open ? ("Open today · "+escH(st.label)) : ("Closed today"+(st.label&&st.label!=="Closed"?(" · "+escH(st.label)):""));
+    return `<div style="display:flex;align-items:center;gap:9px;font-size:16px"><span style="width:11px;height:11px;border-radius:50%;background:${color};flex-shrink:0;box-shadow:0 0 0 4px color-mix(in srgb,${color} 20%,transparent)"></span><strong style="font-family:var(--font-display);color:${color}">${txt}</strong></div>`;
+  },
+  weekHtml(){
+    const order=[1,2,3,4,5,6,0], t=parkToday();
+    return order.map(dow=>{ const w=this.cfg.weekly[dow]||{}, isToday=dow===t.dow, val=w.open?(w.from+" – "+w.to):(w.note||"Closed");
+      return `<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:15px${isToday?";background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:8px;padding-left:8px;padding-right:8px":""}">
+        <strong style="font-family:var(--font-display);color:var(--brand)">${WD_LONG[dow]}${isToday?' <span style="color:var(--accent);font-size:12px">· Today</span>':""}</strong>
+        <span style="font-weight:600;color:${w.open?"var(--ink-soft)":"var(--red)"}">${escH(val)}</span>
+      </div>`; }).join("");
+  },
+  calHtml(){
+    const t=parkToday(); let m=t.m+this.off, y=t.y; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;}
+    const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+    let cells=""; for(let i=0;i<first;i++) cells+="<div></div>";
+    for(let d=1;d<=days;d++){ const st=this.dayState(y,m,d), isToday=(y===t.y&&m===t.m&&d===t.d);
+      const bg=st.closure?"color-mix(in srgb,var(--red) 16%,transparent)":(st.open?"transparent":"#eef1f6");
+      const col=st.open?"var(--ink)":"var(--red)";
+      const ttl=st.open?("Open "+st.label):("Closed"+(st.closure?": "+st.label:""));
+      cells+=`<div title="${escH(ttl)}" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:13px;font-weight:700;background:${bg};color:${col}${isToday?";box-shadow:0 0 0 2px var(--accent) inset":""}${!st.open?";text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--red) 55%,transparent)":""}">${d}</div>`;
+    }
+    const prevDis=this.off<=0;
+    const navBtn=(attr,sym,dis)=>`<button ${attr} aria-label="${attr.indexOf("next")>=0?"Next":"Previous"} month"${dis?" disabled":""} style="width:34px;height:34px;border-radius:10px;background:${dis?"#eef1f6":"color-mix(in srgb,var(--accent) 12%,transparent)"};color:${dis?"var(--ink-soft)":"var(--accent)"};font-size:18px;font-weight:800;line-height:1${dis?";cursor:not-allowed":""}">${sym}</button>`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      ${navBtn("data-hours-prev","‹",prevDis)}
+      <strong style="font-family:var(--font-display);color:var(--brand);font-size:16px">${MONTHS[m]} ${y}</strong>
+      ${navBtn("data-hours-next","›",false)}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;font-size:11px;color:var(--ink-soft);font-weight:800;margin-bottom:5px">${WD_SHORT.map(w=>`<div>${w}</div>`).join("")}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cells}</div>`;
+  },
+  closuresHtml(){
+    const t=parkToday(), todayStr=ymdStr(t.y,t.m,t.d);
+    const up=(this.cfg.closures||[]).filter(c=>c&&c.date&&String(c.date).trim()>=todayStr).sort((a,b)=>String(a.date)<String(b.date)?-1:1).slice(0,6);
+    if(!up.length) return "";
+    return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:7px">📅 Upcoming holiday closures</div>${up.map(c=>{ const p=/(\d{4})-(\d{2})-(\d{2})/.exec(String(c.date)); const lbl=p?(MONTHS[+p[2]-1]+" "+(+p[3])):c.date; return `<div style="display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:3px 0"><span style="color:var(--red);font-weight:700">${escH(lbl)}</span><span style="color:var(--ink-soft)">${escH(c.label||"Closed")}</span></div>`; }).join("")}</div>`;
+  },
+  footerHtml(){
+    const order=[1,2,3,4,5,6,0];
+    return order.map(dow=>{ const w=this.cfg.weekly[dow]||{}, val=w.open?(w.from+" – "+w.to):(w.note||"Closed");
+      return `<div style="font-size:14px;padding:3px 0;color:#aebfd8;display:flex;justify-content:space-between;gap:10px"><strong style="color:#fff;font-weight:700">${WD_SHORT[dow]}</strong><span>${escH(val)}</span></div>`; }).join("");
+  },
+  render(){
+    if(!this.cfg) this.cfg=D.hoursCfg;
+    const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
+    set("hours-today",this.todayHtml()); set("hours-week",this.weekHtml());
+    set("hours-cal",this.calHtml()); set("hours-closures",this.closuresHtml());
+    set("footer-hours",this.footerHtml());
+  },
+  boot(){
+    this.render();
+    if(this.wired) return; this.wired=true;
+    document.addEventListener("click",e=>{ const b=e.target.closest&&e.target.closest("[data-hours-prev],[data-hours-next]"); if(!b||b.disabled) return; this.off+= b.hasAttribute("data-hours-next")?1:-1; if(this.off<0) this.off=0; this.render(); });
+  }
+};
+
 function Visit(){
   return `<section style="background:var(--bg-tint);position:relative">
     ${Scallop("var(--bg)","margin-bottom:-1px")}
     <div class="section" id="visit" style="padding-top:24px">
-      <div class="wrap visit-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center">
+      <div class="wrap visit-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start">
         <div>
           ${SectionHead({ eyebrow:"Hours & Location", title:"Find us in Langham", lead:"On Service Road West, about 25 minutes from Saskatoon. Free parking, stroller-friendly, and fully accessible throughout.", idkey:"visit" })}
-          <div class="card" style="padding:10px 26px;margin-bottom:22px">
-            ${D.hours.map((h,i) => `<div style="display:flex;justify-content:space-between;padding:13px 0;border-bottom:${i<D.hours.length-1?'1px solid var(--line)':'none'};font-size:15.5px">
-              <strong style="font-family:var(--font-display);color:var(--brand)" data-edit="hours.day.${i}">${h.day}</strong>
-              <span style="color:var(--ink-soft);font-weight:600" data-edit="hours.time.${i}">${h.time}</span>
-            </div>`).join("")}
+          <div class="card" style="padding:16px 22px;margin-bottom:14px">
+            <div id="hours-today" style="margin-bottom:8px;padding-bottom:10px;border-bottom:1px solid var(--line)"></div>
+            <div id="hours-week"></div>
+          </div>
+          <div class="card" style="padding:18px 20px;margin-bottom:22px">
+            <div id="hours-cal"></div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:13px;font-size:12px;color:var(--ink-soft)">
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:#eef1f6;display:inline-block"></span>Closed day</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;background:color-mix(in srgb,var(--red) 22%,transparent);display:inline-block"></span>Holiday</span>
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:13px;height:13px;border-radius:4px;box-shadow:0 0 0 2px var(--accent) inset;display:inline-block"></span>Today</span>
+            </div>
+            <div id="hours-closures"></div>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap">
             <div class="card" style="padding:16px 20px;flex:1;min-width:180px">
@@ -752,7 +848,7 @@ function FAQ(){
               ${[
                 ["🧑‍🤝‍🧑","Supervision required","A parent or guardian (18+) stays on-site at all times — we're not a drop-off facility."],
                 ["🧦","Grip socks mandatory","Required for everyone, kids and adults. Forgot yours? $3 at the front desk."],
-                ["✍️","Signed waiver needed","One per child before play — sign on arrival, or ahead of time to skip the line."],
+                ["✍️","Signed waiver needed","One per child each visit — sign on arrival, or ahead of time to skip the line."],
                 ["🤧","Feeling unwell? Stay home","Please pick another day if you or your child have any symptoms."]
               ].map((r,i,arr) => `<li style="display:flex;gap:13px;padding:13px 0;border-bottom:${i<arr.length-1?'1px solid var(--line)':'none'};align-items:flex-start">
                 <span style="font-size:22px;flex-shrink:0">${r[0]}</span>
@@ -789,7 +885,7 @@ function Footer(){
         </div>
         <div>
           <h4 style="font-size:17px;margin-bottom:16px">Hours</h4>
-          ${D.hours.map((h,i) => `<div style="font-size:14.5px;padding:4px 0;color:#aebfd8"><strong style="color:#fff;font-weight:700" data-edit="hours.day.${i}">${h.day}</strong><br/><span data-edit="hours.time.${i}">${h.time}</span></div>`).join("")}
+          <div id="footer-hours"></div>
         </div>
         <div>
           <h4 style="font-size:17px;margin-bottom:16px">Find us</h4>
@@ -1168,7 +1264,7 @@ const WaiverModal = {
   },
   addChild(){ this.readDom(); this.form.children.push({name:"",age:""}); this.render(); },
   removeChild(i){ this.readDom(); this.form.children.splice(i,1); if(!this.form.children.length) this.form.children.push({name:"",age:""}); this.render(); },
-  setExpiry(){ const d=this.form.date; if(!d) return ""; const p=d.split("-"); return (parseInt(p[0],10)+1)+"-"+p[1]+"-"+p[2]; },
+  setExpiry(){ return this.form.date || ""; },   // same-day waiver: valid only on the date signed
   emailValid(){ return /^\S+@\S+\.\S+$/.test(String(this.form.email).trim()); },
   checkEmail(){
     const el=document.getElementById("wv-email"); if(el) this.form.email=el.value.trim();
@@ -1259,7 +1355,7 @@ const WaiverModal = {
         <span>📧</span><span style="font-weight:700;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${String(f.email)||'—'}</span>
         <button type="button" data-waiver-back style="color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:13.5px">Change</button>
       </div>
-      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement below, then sign as the parent or legal guardian of your child(ren). One waiver covers all your children and stays valid for one year.</p>
+      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Please read the agreement below, then sign as the parent or legal guardian of your child(ren). One waiver covers all your children for today's visit — a waiver is valid only on the day it's signed, so guests sign again on each visit.</p>
       <div style="max-height:320px;overflow:auto;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:var(--bg);white-space:pre-wrap;margin-bottom:20px">${WAIVER_TEXT}</div>
 
       <div style="background:color-mix(in srgb,var(--accent) 9%,transparent);border:2px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:14px;padding:13px 16px;margin-bottom:18px;display:flex;gap:12px;align-items:flex-start">
@@ -1305,16 +1401,16 @@ const WaiverModal = {
       <div class="card" style="display:inline-flex;gap:22px;padding:14px 24px;margin-top:20px;box-shadow:none;border:2px solid var(--line);flex-wrap:wrap;justify-content:center">
         <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Signed by</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--brand)">${f.parent||'—'}</div></div>
         <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Date signed</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--brand)">${f.date||'—'}</div></div>
-        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid until</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">${exp||'—'}</div></div>
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid for</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">${exp||'today'}</div></div>
       </div>
-      <p style="font-size:13px;color:var(--ink-soft);margin-top:18px">Saved to our records — your waiver is valid for one year. See you soon! 🌾</p>
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:18px">Saved to our records — valid for today's visit. Guests sign a fresh waiver on each visit. See you soon! 🌾</p>
       <button class="btn btn-primary btn-lg" style="margin-top:16px" data-waiver-close>Done</button>
     </div>`;
   },
   emailHtml(){
     const f=this.form;
     return `<div>
-      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:18px">Enter your email to begin. We keep your signed waiver on file for <strong>one year</strong> — next time, just enter the same email and you're set.</p>
+      <p style="color:var(--ink-soft);font-size:15px;margin-bottom:18px">Enter your email to begin. A waiver is valid only on the <strong>day it's signed</strong>, so guests sign again on each visit — we'll check if you've already signed for today.</p>
       ${this.field("Email address", `<input id="wv-email" type="email" value="${String(f.email).replace(/"/g,'&quot;')}" placeholder="you@email.com" class="bk-input" autocomplete="email" />`, "We'll use this to look up and store your waiver.", this.emailErr?"Please enter a valid email":"")}
       <div style="text-align:center;margin-top:2px"><button type="button" data-waiver-lookupview style="color:var(--accent);font-family:var(--font-display);font-weight:700;font-size:14px;background:none">Already signed? Check by name →</button></div>
       <div class="bk-foot">
@@ -1328,11 +1424,11 @@ const WaiverModal = {
     const kids = w.children ? w.children : "your family";
     return `<div style="text-align:center;padding:10px 0 6px">
       <div style="font-size:54px;animation:bob 1.6s ease-in-out infinite">🎉</div>
-      <h3 class="h-xl" style="font-size:28px;margin-top:8px">You're already covered!</h3>
-      <p style="color:var(--ink-soft);font-size:15.5px;margin-top:10px;max-width:470px;margin-inline:auto">We found a valid waiver on file for <strong style="color:var(--brand)">${String(this.form.email)}</strong>${w.name?`, signed by ${w.name}`:''}. No need to sign again — just check in at the front desk. 🎈</p>
+      <h3 class="h-xl" style="font-size:28px;margin-top:8px">You're signed in for today!</h3>
+      <p style="color:var(--ink-soft);font-size:15.5px;margin-top:10px;max-width:470px;margin-inline:auto">You've already signed a waiver today for <strong style="color:var(--brand)">${String(this.form.email)}</strong>${w.name?`, signed by ${w.name}`:''}. No need to sign again for today's visit — just check in at the front desk. 🎈</p>
       <div class="card" style="display:inline-flex;gap:24px;padding:14px 26px;margin-top:20px;box-shadow:none;border:2px solid var(--line);flex-wrap:wrap;justify-content:center">
         <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">On file for</div><div style="font-family:var(--font-display);font-weight:800;font-size:17px;color:var(--brand)">${kids}</div></div>
-        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid until</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">${w.expiry||'—'}</div></div>
+        <div><div style="font-size:12px;color:var(--ink-soft);font-weight:700">Valid for</div><div style="font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--green)">Today${w.expiry?` (${w.expiry})`:''}</div></div>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
         <button class="btn btn-ghost" data-waiver-resign>Sign a new waiver anyway</button>
@@ -1356,14 +1452,14 @@ const WaiverModal = {
               <strong style="font-family:var(--font-display);font-size:17px;color:var(--brand)">${esc(m.parent||"—")}</strong>${badge}
             </div>
             <div style="font-size:14px;color:var(--ink-soft);margin-top:6px">Children: <strong style="color:var(--ink)">${esc(m.children||"—")}</strong></div>
-            <div style="font-size:14px;color:var(--ink-soft);margin-top:2px">${ok?"Valid until":"Expired"}: <strong style="color:${ok?'var(--green)':'var(--red)'}">${esc(m.expiry||"—")}</strong>${(typeof m.daysLeft==="number"&&ok)?` · ${m.daysLeft} day${m.daysLeft===1?'':'s'} left`:""}</div>
+            <div style="font-size:14px;color:var(--ink-soft);margin-top:2px">${ok?`Valid <strong style="color:var(--green)">today</strong>`:`<strong style="color:var(--red)">Expired</strong> — needs a new waiver today`}${(m.signed||m.expiry)?` · signed ${esc(m.signed||m.expiry)}`:""}</div>
           </div>`;
         }).join("");
       }
     }
     return `<div>
       <p style="color:var(--ink-soft);font-size:15px;margin-bottom:16px">Enter a <strong>child's name</strong> or the <strong>parent/guardian's name</strong> (or email) to see if a waiver is on file and still valid.</p>
-      ${this.field("Child or parent name", `<input id="wv-lookup" value="${esc(this.lookupTermShown||"")}" placeholder="e.g. Maple, or Jordan Lee" class="bk-input" />`, "Waivers stay valid for one year from the date signed.", this.lookupErr||"")}
+      ${this.field("Child or parent name", `<input id="wv-lookup" value="${esc(this.lookupTermShown||"")}" placeholder="e.g. Maple, or Jordan Lee" class="bk-input" />`, "A waiver is valid only on the day it's signed — guests sign again each visit.", this.lookupErr||"")}
       <div style="margin-top:6px">${results}</div>
       <div class="bk-foot">
         <button class="btn btn-ghost" data-waiver-lookup-back style="padding:13px 22px;font-size:15px">← Back</button>
@@ -1377,7 +1473,7 @@ const WaiverModal = {
     if(!this.open){ m.innerHTML=""; return; }
     const done=this.done, welcome=this.welcome, lookup=this.lookupView, step=this.step;
     const title = done?"Waiver signed!" : welcome?"Welcome back!" : lookup?"Check your waiver" : step===0?"Start your waiver" : "Sign your waiver";
-    const sub = done?"You're all set 🎉" : welcome?"You're already covered" : lookup?"Look up by child or parent name" : step===0?"Enter your email to begin · valid 1 year" : "Parent / guardian · one waiver per family · valid 1 year";
+    const sub = done?"You're all set 🎉" : welcome?"Already signed for today" : lookup?"Look up by child or parent name" : step===0?"Enter your email to begin · valid for today" : "Parent / guardian · one waiver per family · valid for today";
     const body = done?this.successHtml() : welcome?this.welcomeHtml() : lookup?this.lookupHtml() : step===0?this.emailHtml() : this.formHtml();
     m.innerHTML=`<div class="bk-overlay" data-waiver-overlay>
       <div class="card bk-card" style="width:min(680px,100%)">
@@ -1603,16 +1699,18 @@ const PolicyModal = {
       </div>
     </section>`;
   }
+  function applyHours(h){ if(h && Array.isArray(h.weekly) && h.weekly.length===7){ HoursUI.use(h); HoursUI.render(); } }
   function loadContent(){
     if(/[?&]raw=1/.test(location.search)) return;   // raw mode: pure defaults (used by admin's text editor)
     let done=false; const t=setTimeout(()=>{done=true;},4000);
     fetch("api/content.php",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-      if(done||!j) return; clearTimeout(t); applyImages(j.images); applyText(j.text); renderThemes(j.themes); buildPromos(j.items);
+      if(done||!j) return; clearTimeout(t); applyImages(j.images); applyText(j.text); renderThemes(j.themes); applyHours(j.hours); buildPromos(j.items);
     }).catch(()=>{});
   }
 
   render();
   wire();
+  HoursUI.boot();
   loadContent();
 })();
 </script>

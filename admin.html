@@ -176,15 +176,33 @@ function fetchAdmin(key, onOk, onErr){
   setTimeout(() => { if(done) return; done = true; cleanup(); onErr&&onErr(); }, 12000);
 }
 
-function todayMid(){ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),t.getDate()); }
-function parseYMD(s){ const m=/(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"").trim()); return m ? new Date(+m[1],+m[2]-1,+m[3]) : null; }
-function expiryStatus(expStr){
-  const d=parseYMD(expStr); if(!d) return {state:"none"};
-  const days=Math.round((d - todayMid())/86400000);
-  return { state: days>=0?"active":"expired", days:days, expiry:String(expStr).trim() };
+// "today" in the park's timezone (Langham, SK = America/Regina, no DST)
+function parkTodayDate(){
+  let y,m,d;
+  try{ const p=/(\d{4})-(\d{2})-(\d{2})/.exec(new Date().toLocaleDateString("en-CA",{timeZone:"America/Regina"})); y=+p[1]; m=+p[2]-1; d=+p[3]; }
+  catch(e){ const t=new Date(); y=t.getFullYear(); m=t.getMonth(); d=t.getDate(); }
+  return new Date(y,m,d);
+}
+function parseYMD(s){
+  s=String(s||"").trim();
+  let m=/(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s); if(m) return new Date(+m[3],+m[1]-1,+m[2]);
+  const t=Date.parse(s); if(isNaN(t)) return null; const d=new Date(t); return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+// the signed-date column (NOT the timestamp/expiry columns)
+function findSignedIdx(headers){
+  let i=headers.findIndex(h=>/^(date|date signed|signed(\s*date)?)$/i.test(String(h).trim()));
+  if(i<0) i=headers.findIndex(h=>/date/i.test(h) && !/expir|time|stamp|updat/i.test(h));
+  return i;
+}
+// same-day waiver: active ONLY if signed today (park time)
+function waiverState(signedStr){
+  const d=parseYMD(signedStr); if(!d) return {state:"none"};
+  return (d.getTime()===parkTodayDate().getTime()) ? {state:"active", signed:String(signedStr).trim()}
+                                                    : {state:"expired", signed:String(signedStr).trim()};
 }
 function statusPill(st){
-  if(st.state==="active") return '<span class="pill ok">✓ Active'+(st.days<=30?' · '+st.days+'d':'')+'</span>';
+  if(st.state==="active") return '<span class="pill ok">✓ Today</span>';
   if(st.state==="expired") return '<span class="pill bad">✗ Expired</span>';
   return '<span class="pill na">—</span>';
 }
@@ -194,23 +212,23 @@ function renderTable(){
   const q = ($("search").value || "").toLowerCase();
   const area = $("tableArea");
   const isW = activeTab==="waivers";
-  const expIdx = isW ? d.headers.findIndex(h=>/expir/i.test(h)) : -1;
+  const sIdx = isW ? findSignedIdx(d.headers) : -1;
   if(!d.headers.length){ area.innerHTML = '<p class="empty">No '+activeTab+' yet. New '+activeTab+' will appear here automatically.</p>'; $("count").textContent=""; $("verdict").innerHTML=""; return; }
   const rows = d.rows.filter(r => !q || r.some(c => String(c).toLowerCase().indexOf(q) >= 0));
 
-  // front-desk verdict banner (waivers tab + active search)
+  // front-desk verdict banner (waivers tab + active search) — same-day rule
   let verdict="";
-  if(isW && q && expIdx>=0){
-    if(!rows.length){ verdict='<div class="verdict miss">🔎 No waiver on file matching “'+esc(q)+'”. Please ask them to sign one.</div>'; }
+  if(isW && q && sIdx>=0){
+    if(!rows.length){ verdict='<div class="verdict miss">🔎 No waiver on file matching “'+esc(q)+'”. Please ask them to sign one today.</div>'; }
     else {
-      const sts = rows.map(r=>expiryStatus(r[expIdx]));
+      const sts = rows.map(r=>waiverState(r[sIdx]));
       const active = sts.filter(s=>s.state==="active");
       if(active.length){
-        const latest = active.reduce((a,b)=>a.days>b.days?a:b);
-        verdict='<div class="verdict ok">✓ Active waiver on file — valid until <strong>'+esc(latest.expiry)+'</strong> ('+latest.days+' days left). '+rows.length+' record'+(rows.length===1?'':'s')+' match “'+esc(q)+'”.</div>';
+        verdict='<div class="verdict ok">✓ Signed a waiver <strong>today</strong> — good to play. '+rows.length+' record'+(rows.length===1?'':'s')+' match “'+esc(q)+'”.</div>';
       } else {
-        const recent = sts.filter(s=>s.state==="expired").reduce((a,b)=>a.days>b.days?a:b);
-        verdict='<div class="verdict bad">✗ No active waiver — most recent expired <strong>'+esc(recent.expiry)+'</strong>. Please ask them to sign again.</div>';
+        const dated = sts.filter(s=>s.state==="expired" && s.signed).map(s=>s.signed).sort();
+        const last = dated.length ? dated[dated.length-1] : "";
+        verdict='<div class="verdict bad">✗ No waiver signed today'+(last?(' — last signed <strong>'+esc(last)+'</strong>'):'')+'. Please ask them to sign again today.</div>';
       }
     }
   }
@@ -220,7 +238,7 @@ function renderTable(){
   let h = '<div class="tablewrap"><table><thead><tr>' + headers.map(x=>'<th>'+esc(x)+'</th>').join('') + '</tr></thead><tbody>';
   h += rows.map(r => {
     let cells = r.map(c=>'<td>'+esc(c)+'</td>').join('');
-    if(isW){ const st = expIdx>=0?expiryStatus(r[expIdx]):{state:"none"}; cells = '<td>'+statusPill(st)+'</td>'+cells; }
+    if(isW){ const st = sIdx>=0?waiverState(r[sIdx]):{state:"none"}; cells = '<td>'+statusPill(st)+'</td>'+cells; }
     return '<tr>'+cells+'</tr>';
   }).join('');
   h += '</tbody></table></div>';
@@ -296,6 +314,22 @@ const THEME_DEFAULTS = [
   {emoji:"☕",title:"Whistle Stop Café",tag:"For parents",desc:"A grown-up retreat — fresh coffee, healthy snacks and big windows to watch the fun."},
   {emoji:"✨",title:"Quiet Sensory Room",tag:"Inclusive",desc:"A soft-lit, low-stimulation space for little ones who need a breather."}
 ];
+// Business hours (weekly indexed by JS getDay 0=Sun…6=Sat) + holiday closures
+const HOURS_DEFAULT = {
+  weekly:[
+    {open:true, from:"9:00", to:"6:00", note:""},
+    {open:false,from:"",     to:"",     note:"Group bookings only"},
+    {open:true, from:"9:30", to:"6:00", note:""},
+    {open:true, from:"9:30", to:"6:00", note:""},
+    {open:true, from:"9:30", to:"6:00", note:""},
+    {open:true, from:"9:30", to:"8:00", note:""},
+    {open:true, from:"9:00", to:"8:00", note:""}
+  ],
+  closures:[]
+};
+function cloneHours(h){ return { weekly:h.weekly.map(w=>Object.assign({},w)), closures:(h.closures||[]).map(c=>Object.assign({},c)) }; }
+let HOURS = cloneHours(HOURS_DEFAULT);
+
 const SECTIONS = [
   { id:"hero", title:"① 顶部主视觉 Hero", thumb:"hero.jpg",
     images:[{key:"hero", label:"主视觉大图"}],
@@ -310,7 +344,7 @@ const SECTIONS = [
   { id:"packages", title:"⑤ 派对 / 预订 Birthdays & Parties", thumb:"packages.jpg",
     images:[], text:k=>k.indexOf("sec.packages.")===0 || k.indexOf("pkg.")===0 },
   { id:"visit", title:"⑥ 营业时间 / 位置 / 联系 Hours & Location", thumb:"visit.jpg",
-    images:[], text:k=>k.indexOf("sec.visit.")===0 || k.indexOf("hours.")===0 || k.indexOf("brand.")===0 },
+    images:[], hours:true, text:k=>k.indexOf("sec.visit.")===0 || k.indexOf("brand.")===0 },
   { id:"about", title:"⑦ 关于我们 About", thumb:"about.jpg",
     images:[], text:k=>k.indexOf("sec.about.")===0 || k.indexOf("about.")===0 },
   { id:"gallery", title:"⑧ 画廊 Gallery", thumb:"gallery.jpg",
@@ -352,8 +386,9 @@ function loadPageEditor(){
     CONTENT = { images:(j&&j.images&&typeof j.images==="object"&&!Array.isArray(j.images))?j.images:{}, items:(j&&Array.isArray(j.items))?j.items:[] };
     TEXT = (j&&j.text&&typeof j.text==="object"&&!Array.isArray(j.text))?j.text:{};
     THEMES = (j&&Array.isArray(j.themes)&&j.themes.length>=3)?j.themes.map(t=>Object.assign({},t)):THEME_DEFAULTS.map(t=>Object.assign({},t));
+    HOURS = (j&&j.hours&&Array.isArray(j.hours.weekly)&&j.hours.weekly.length===7)?cloneHours({weekly:j.hours.weekly, closures:j.hours.closures||[]}):cloneHours(HOURS_DEFAULT);
     discoverDefaults(renderSections);
-  }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; THEMES=THEME_DEFAULTS.map(t=>Object.assign({},t)); discoverDefaults(renderSections); });
+  }).catch(()=>{ CONTENT={images:{},items:[]}; TEXT={}; THEMES=THEME_DEFAULTS.map(t=>Object.assign({},t)); HOURS=cloneHours(HOURS_DEFAULT); discoverDefaults(renderSections); });
 }
 
 function renderSections(){
@@ -383,9 +418,11 @@ function renderSections(){
          ${THEMES.map((t,i)=>themeEditorHTML(t,i,THEMES.length)).join("")}
          <button class="addBtn" data-th-add${THEMES.length>=9?' disabled style="opacity:.45;cursor:not-allowed"':''}>＋ 添加主题（${THEMES.length}/9）</button>`
       : "";
-    const hasContent = sec.images.length || sec.promos || sec.themes || fields;
+    const hoursBlock = sec.hours ? hoursEditorHTML(HOURS) : "";
+    const hasContent = sec.images.length || sec.promos || sec.themes || sec.hours || fields;
     const body = `<div class="secbody"${OPEN[si]?'':' style="display:none"'}>
       ${sec.images.length?`<div class="csub">图片（点「上传」换图，留空＝用默认插画）</div><div class="slotgrid" style="margin-bottom:12px">${imgs}</div>`:''}
+      ${hoursBlock}
       ${promos}
       ${fields?`<div class="csub" style="margin-top:6px">文字（改框＝覆盖，清空＝恢复默认）</div>${fields}`:''}
       ${themesBlock}
@@ -450,6 +487,35 @@ function themeEditorHTML(t, i, count){
   </div>`;
 }
 
+function hoursEditorHTML(h){
+  const order=[1,2,3,4,5,6,0];
+  const names=["周日 Sun","周一 Mon","周二 Tue","周三 Wed","周四 Thu","周五 Fri","周六 Sat"];
+  const rows=order.map(dow=>{ const w=h.weekly[dow]||{open:false,from:"",to:"",note:""};
+    const right = w.open
+      ? `<span style="color:var(--soft);font-size:13px">营业 Open</span>
+         <input class="ci" style="width:88px" data-hr-dow="${dow}" data-hr-f="from" value="${esc(w.from||"")}" placeholder="9:30">
+         <span style="color:var(--soft)">–</span>
+         <input class="ci" style="width:88px" data-hr-dow="${dow}" data-hr-f="to" value="${esc(w.to||"")}" placeholder="6:00">`
+      : `<span style="color:var(--red);font-weight:700;font-size:13px;white-space:nowrap">休息 Closed</span>
+         <input class="ci" style="flex:1;min-width:150px" data-hr-dow="${dow}" data-hr-f="note" value="${esc(w.note||"")}" placeholder="休息原因（可选）如 Group bookings only">`;
+    return `<div class="item" style="padding:11px 14px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <label class="switch" style="min-width:132px;gap:8px"><input type="checkbox" data-hr-dow="${dow}" data-hr-f="open" ${w.open?"checked":""} style="width:18px;height:18px;accent-color:var(--green)"> <b>${names[dow]}</b></label>
+        ${right}
+      </div>
+    </div>`; }).join("");
+  const closures=(h.closures||[]).map((c,i)=>`<div class="item" style="padding:10px 12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input class="ci" type="date" style="width:172px" data-cl-i="${i}" data-cl-f="date" value="${esc(c.date||"")}">
+      <input class="ci" style="flex:1;min-width:170px" data-cl-i="${i}" data-cl-f="label" value="${esc(c.label||"")}" placeholder="假日名称，如 Canada Day（可留空）">
+      <button class="delBtn" data-cl-del="${i}">删除</button>
+    </div></div>`).join("");
+  return `<div class="csub" style="margin-top:6px">营业时间 —— 勾选当天是否营业。营业就填开门 / 关门时间；休息可写原因。</div>
+    ${rows}
+    <div class="csub" style="margin-top:16px">特殊不营业日期（节假日等）—— 这些日期会在首页日历上<b>标红</b>，并出现在「Upcoming holiday closures」里。</div>
+    ${closures || '<p class="csub">还没有特殊休息日，点下面按钮添加。</p>'}
+    <button class="addBtn" data-cl-add>＋ 添加休息日 Add closed date</button>`;
+}
+
 function doUpload(input, cb){
   const file = input.files && input.files[0]; if(!file){ return; }
   const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
@@ -468,18 +534,23 @@ function doUpload(input, cb){
     const el=e.target;
     if(el.hasAttribute("data-tkey")){ TEXT[el.getAttribute("data-tkey")] = el.value; return; }
     if(el.hasAttribute("data-th-i")){ const i=+el.getAttribute("data-th-i"), f=el.getAttribute("data-th-f"); if(THEMES[i]) THEMES[i][f]=el.value; return; }
+    if(el.hasAttribute("data-hr-dow")){ const dow=+el.getAttribute("data-hr-dow"), f=el.getAttribute("data-hr-f"); if(f!=="open" && HOURS.weekly[dow]) HOURS.weekly[dow][f]=el.value; return; }
+    if(el.hasAttribute("data-cl-i")){ const i=+el.getAttribute("data-cl-i"), f=el.getAttribute("data-cl-f"); if(HOURS.closures[i]) HOURS.closures[i][f]=el.value; return; }
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; }
   });
   p.addEventListener("change", e=>{
     const el=e.target;
+    if(el.hasAttribute("data-hr-dow") && el.getAttribute("data-hr-f")==="open"){ const dow=+el.getAttribute("data-hr-dow"); if(HOURS.weekly[dow]){ HOURS.weekly[dow].open=el.checked; renderSections(); } return; }
     if(el.hasAttribute("data-field")){ const i=+el.getAttribute("data-i"), f=el.getAttribute("data-field"); if(CONTENT.items[i]) CONTENT.items[i][f]=(el.type==="checkbox")?el.checked:el.value; return; }
     if(el.hasAttribute("data-img-slot")){ const key=el.getAttribute("data-img-slot"); doUpload(el, url=>{ CONTENT.images[key]=url; renderSections(); }); return; }
     if(el.hasAttribute("data-item-img")){ const i=+el.getAttribute("data-item-img"); doUpload(el, url=>{ if(CONTENT.items[i]){ CONTENT.items[i].image=url; renderSections(); } }); return; }
     if(el.hasAttribute("data-th-img")){ const i=+el.getAttribute("data-th-img"); doUpload(el, url=>{ if(THEMES[i]){ THEMES[i].image=url; renderSections(); } }); return; }
   });
   p.addEventListener("click", e=>{
-    const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item],[data-th-add],[data-th-del],[data-th-imgreset]");
+    const el = e.target.closest("[data-sec-toggle],[data-img-reset],[data-item-img-reset],[data-item-del],[data-add-item],[data-th-add],[data-th-del],[data-th-imgreset],[data-cl-add],[data-cl-del]");
     if(!el) return;
+    if(el.hasAttribute("data-cl-add")){ HOURS.closures.push({date:"",label:""}); renderSections(); return; }
+    if(el.hasAttribute("data-cl-del")){ const i=+el.getAttribute("data-cl-del"); HOURS.closures.splice(i,1); renderSections(); return; }
     if(el.hasAttribute("data-sec-toggle")){ const i=+el.getAttribute("data-sec-toggle"); OPEN[i]=!OPEN[i]; renderSections(); return; }
     if(el.hasAttribute("data-img-reset")){ delete CONTENT.images[el.getAttribute("data-img-reset")]; renderSections(); return; }
     if(el.hasAttribute("data-item-img-reset")){ const i=+el.getAttribute("data-item-img-reset"); if(CONTENT.items[i]){ CONTENT.items[i].image=""; renderSections(); } return; }
@@ -493,7 +564,7 @@ function doUpload(input, cb){
     const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
     $("savePage").disabled=true; $("pageStatus").textContent="保存中…";
     const out={}; p.querySelectorAll("[data-tkey]").forEach(el=>{ const k=el.getAttribute("data-tkey"), v=el.value, def=TEXT_DEFAULTS[k]||""; if(v.trim()!=="" && v.trim()!==def.trim()) out[k]=v; });
-    const obj={ images:CONTENT.images, items:CONTENT.items, text:out, themes:THEMES };
+    const obj={ images:CONTENT.images, items:CONTENT.items, text:out, themes:THEMES, hours:HOURS };
     const fd=new FormData(); fd.append("key",key); fd.append("payload",JSON.stringify(obj));
     fetch(CONTENT_API,{method:"POST",body:fd}).then(r=>r.json()).then(j=>{
       $("savePage").disabled=false;

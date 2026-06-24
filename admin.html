@@ -302,6 +302,9 @@ const UPLOAD_API  = "api/upload.php";
 let CONTENT = { images:{}, items:[] };
 let TEXT = {}, TEXT_DEFAULTS = {}, TEXT_ORDER = [];
 let OPEN = { 0:true };   // which section cards are expanded
+// contact fields where an empty value is a real choice ("hide on site"), not "restore default"
+const BLANKABLE = { "brand.phone":1, "brand.email":1, "brand.address":1 };
+const BLANK_HINT = { "brand.phone":"留空＝首页不显示电话（如正在申请新号码）", "brand.email":"留空＝首页不显示邮箱", "brand.address":"留空＝首页不显示地址" };
 
 let THEMES = [];   // the "Eight Worlds" theme cards (editable, 3–9)
 const THEME_DEFAULTS = [
@@ -408,7 +411,8 @@ function renderSections(){
       const f = (def.length>56)
         ? `<textarea class="ci" data-tkey="${esc(k)}" rows="2">${esc(cur)}</textarea>`
         : `<input class="ci" data-tkey="${esc(k)}" value="${esc(cur)}">`;
-      return `<label class="fld2" style="display:block;margin-bottom:11px"><span>${esc(humanizeKey(k))}</span>${f}</label>`;
+      const hint = BLANK_HINT[k] ? `<span style="display:block;color:var(--soft);font-size:12px;margin-top:4px">${esc(BLANK_HINT[k])}</span>` : "";
+      return `<label class="fld2" style="display:block;margin-bottom:11px"><span>${esc(humanizeKey(k))}</span>${f}${hint}</label>`;
     }).join("");
     const promos = sec.promos
       ? `<div>${CONTENT.items.length?CONTENT.items.map((it,i)=>itemHtml(it,i)).join(""):'<p class="csub">还没有促销 / 新闻，点下面按钮添加。</p>'}</div><button class="addBtn" data-add-item>＋ 添加促销 / 新闻</button>`
@@ -578,7 +582,9 @@ function doUpload(input, cb){
   $("savePage").addEventListener("click", ()=>{
     const key = sessionStorage.getItem("fd_admin_key"); if(!key){ alert("请重新登录"); return; }
     $("savePage").disabled=true; $("pageStatus").textContent="保存中…";
-    const out={}; p.querySelectorAll("[data-tkey]").forEach(el=>{ const k=el.getAttribute("data-tkey"), v=el.value, def=TEXT_DEFAULTS[k]||""; if(v.trim()!=="" && v.trim()!==def.trim()) out[k]=v; });
+    const out={}; p.querySelectorAll("[data-tkey]").forEach(el=>{ const k=el.getAttribute("data-tkey"), v=el.value, def=TEXT_DEFAULTS[k]||"";
+      if(BLANKABLE[k]){ if(v.trim()!==def.trim()) out[k]=v; }              // contact fields: empty IS saved (= hide on site)
+      else if(v.trim()!=="" && v.trim()!==def.trim()) out[k]=v; });        // other text: empty = restore default
     const obj={ images:CONTENT.images, items:CONTENT.items, text:out, themes:THEMES, hours:HOURS };
     const fd=new FormData(); fd.append("key",key); fd.append("payload",JSON.stringify(obj));
     fetch(CONTENT_API,{method:"POST",body:fd}).then(r=>r.json()).then(j=>{

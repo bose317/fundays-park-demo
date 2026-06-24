@@ -647,7 +647,7 @@ function Packages(){
           <h3 style="color:#fff;font-size:21px" data-edit="pkg.custom.title">Bigger group or a custom celebration?</h3>
           <p style="color:rgba(255,255,255,.82);font-size:15px;margin-top:4px" data-edit="pkg.custom.body">Group events, fundraisers, corporate family days — tell us what you're planning and we'll tailor it for you.</p>
         </div>
-        <a class="btn btn-sun" href="tel:${D.brand.phone}">📞 Call a planner</a>
+        <a class="btn btn-sun js-phone" href="tel:${D.brand.phone}">📞 Call a planner</a>
       </div>
     </div>
   </section>`;
@@ -759,11 +759,11 @@ function Visit(){
             <div id="hours-closures"></div>
           </div>
           <div style="display:flex;gap:14px;flex-wrap:wrap">
-            <div class="card" style="padding:16px 20px;flex:1;min-width:180px">
+            <div class="card js-address" style="padding:16px 20px;flex:1;min-width:180px">
               <div style="font-size:13px;color:var(--ink-soft);font-weight:700">📍 Address</div>
               <div style="margin-top:6px;font-weight:700;color:var(--brand)" data-edit="brand.address">${D.brand.address}</div>
             </div>
-            <div class="card" style="padding:16px 20px;flex:1;min-width:160px">
+            <div class="card js-phone" style="padding:16px 20px;flex:1;min-width:160px">
               <div style="font-size:13px;color:var(--ink-soft);font-weight:700">📞 Phone</div>
               <a href="tel:${D.brand.phone}" style="margin-top:6px;font-weight:800;color:var(--accent);font-family:var(--font-display);font-size:19px;display:block" data-edit="brand.phone">${D.brand.phone}</a>
             </div>
@@ -891,9 +891,9 @@ function Footer(){
         </div>
         <div>
           <h4 style="font-size:17px;margin-bottom:16px">Find us</h4>
-          <p style="color:#aebfd8;font-size:15px;line-height:1.7" data-edit="brand.address">${D.brand.address}</p>
-          <p style="margin-top:12px"><a href="tel:${D.brand.phone}" style="font-weight:800;color:#fff;font-size:18px;font-family:var(--font-display)" data-edit="brand.phone">${D.brand.phone}</a></p>
-          <p style="margin-top:4px"><a href="mailto:${D.brand.email}" data-edit="brand.email">${D.brand.email}</a></p>
+          <p class="js-address" style="color:#aebfd8;font-size:15px;line-height:1.7" data-edit="brand.address">${D.brand.address}</p>
+          <p class="js-phone" style="margin-top:12px"><a href="tel:${D.brand.phone}" style="font-weight:800;color:#fff;font-size:18px;font-family:var(--font-display)" data-edit="brand.phone">${D.brand.phone}</a></p>
+          <p class="js-email" style="margin-top:4px"><a href="mailto:${D.brand.email}" data-edit="brand.email">${D.brand.email}</a></p>
           <button class="btn btn-sun" style="margin-top:18px" data-book>🎉 Book a Party</button>
         </div>
       </div>
@@ -1665,6 +1665,11 @@ const PolicyModal = {
       const k=el.getAttribute("data-edit"), v=text[k];
       if(v!=null && String(v).trim()!=="") el.textContent=v;
     });
+    // contact fields: an EXPLICITLY blank override hides the related UI (e.g. phone not assigned yet)
+    const contact=(key,sel)=>{ if(!(key in text)) return; const blank=String(text[key]).trim()===""; document.querySelectorAll(sel).forEach(e=>{ e.style.display = blank ? "none" : ""; }); };
+    contact("brand.phone", ".js-phone");
+    contact("brand.email", ".js-email");
+    contact("brand.address", ".js-address");
     // keep the click-to-call / email links in sync with edited contact text
     const ph=text["brand.phone"]; if(ph && String(ph).trim()){ const tel="tel:"+String(ph).replace(/[^\d+]/g,""); document.querySelectorAll('a[href^="tel:"]').forEach(a=>a.setAttribute("href",tel)); }
     const em=text["brand.email"]; if(em && String(em).trim()){ const m="mailto:"+String(em).trim(); document.querySelectorAll('a[href^="mailto:"]').forEach(a=>a.setAttribute("href",m)); }
